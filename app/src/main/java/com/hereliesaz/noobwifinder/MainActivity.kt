@@ -14,6 +14,9 @@ import com.hereliesaz.noobwifinder.databinding.ActivityMainBinding
 import com.hereliesaz.noobwifinder.services.LocationService
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
+import android.widget.ImageView
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
@@ -24,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiListAdapter: WifiListAdapter
     private lateinit var mapView: MapView
     private lateinit var locationService: LocationService
+    private lateinit var drawerToggle: ActionBarDrawerToggle
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -47,6 +51,17 @@ class MainActivity : AppCompatActivity() {
         Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setSupportActionBar(binding.toolbar)
+        drawerToggle = ActionBarDrawerToggle(this, binding.drawerLayout, R.string.drawer_open, R.string.drawer_close)
+        binding.drawerLayout.addDrawerListener(drawerToggle)
+        drawerToggle.syncState()
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        binding.navView.getHeaderView(0).findViewById<ImageView>(R.id.nav_header_icon).setOnClickListener {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        }
+
 
         locationService = LocationService(this)
 
@@ -117,7 +132,7 @@ class MainActivity : AppCompatActivity() {
             if (lastKnownLocation != null) {
                 val userLocation = GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude)
                 mapView.controller.setCenter(userLocation)
-                mapView.controller.setZoom(15.0)
+                mapView.controller.setZoom(17.0)
             }
         }
     }
@@ -126,6 +141,7 @@ class MainActivity : AppCompatActivity() {
         locationService.locationUpdates.observe(this) { location ->
             val userLocation = GeoPoint(location.latitude, location.longitude)
             mapView.controller.animateTo(userLocation)
+            mapView.controller.setZoom(17.0)
         }
     }
 
@@ -142,5 +158,12 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         mapView.onPause()
         locationService.stopLocationUpdates()
+    }
+
+    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
