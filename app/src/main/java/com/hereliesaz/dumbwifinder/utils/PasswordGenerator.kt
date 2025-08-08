@@ -4,31 +4,31 @@ object PasswordGenerator {
 
     fun generateAddressVariations(address: String): List<String> {
         val variations = mutableListOf<String>()
-        val lower = address.toLowerCase()
+        val lower = address.lowercase()
         variations.add(lower)
-        variations.add(address.toUpperCase())
-        variations.add(address.capitalize())
+        variations.add(address.uppercase())
+        variations.add(address.replaceFirstChar { it.titlecase() })
 
         // Remove street, avenue, etc.
         val streetPattern = "\\s+(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr)$".toRegex(RegexOption.IGNORE_CASE)
         val withoutDesignation = lower.replace(streetPattern, "")
         if (withoutDesignation != lower) {
             variations.add(withoutDesignation)
-            variations.add(withoutDesignation.toUpperCase())
-            variations.add(withoutDesignation.capitalize())
+            variations.add(withoutDesignation.uppercase())
+            variations.add(withoutDesignation.replaceFirstChar { it.titlecase() })
         }
 
         // Just street name without number
         val streetName = lower.replaceFirst(Regex("^\\d+\\s+"), "")
         if(streetName != lower) {
             variations.add(streetName)
-            variations.add(streetName.toUpperCase())
-            variations.add(streetName.capitalize())
+            variations.add(streetName.uppercase())
+            variations.add(streetName.replaceFirstChar { it.titlecase() })
             val streetNameWithoutDesignation = streetName.replace(streetPattern, "")
             if (streetNameWithoutDesignation != streetName) {
                 variations.add(streetNameWithoutDesignation)
-                variations.add(streetNameWithoutDesignation.toUpperCase())
-                variations.add(streetNameWithoutDesignation.capitalize())
+                variations.add(streetNameWithoutDesignation.uppercase())
+                variations.add(streetNameWithoutDesignation.replaceFirstChar { it.titlecase() })
             }
         }
 
