@@ -7,34 +7,51 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:titleTextColor="@color/white" />
+            app:titleTextColor="@color/white"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/wifi_list"
             android:layout_width="196dp"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/log_console_scroll"/>
 
-        <org.osmdroid.views.MapView
-            android:id="@+id/map_view"
-            android:layout_width="355dp"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/map_card"
+            android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_weight="1" /><ScrollView
+            app:cardCornerRadius="150dp"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintWidth_percent="0.7"
+            app:layout_constraintTop_toBottomOf="@id/toolbar"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/log_console_scroll"
+            android:layout_marginBottom="16dp">
+
+            <org.osmdroid.views.MapView
+                android:id="@+id/map_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <ScrollView
+            android:id="@+id/log_console_scroll"
             android:layout_width="match_parent"
             android:layout_height="100dp"
-            android:layout_weight="0">
+            app:layout_constraintBottom_toTopOf="@+id/start_stop_button">
 
             <TextView
                 android:id="@+id/log_console"
@@ -43,18 +60,23 @@
                 android:padding="8dp"
                 android:scrollbars="vertical"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="?android:attr/textColorPrimary"
                 tools:text="Log messages will appear here." />
         </ScrollView>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/start_stop_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_margin="16dp"
-            android:text="Start" />
+            android:text="Start // WiFinding"
+            app:cornerRadius="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"

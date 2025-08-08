@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupMap() {
         val mapController = mapView.controller
-        mapController.setZoom(9.5)
+        mapController.setZoom(20.0)
         val startPoint = GeoPoint(48.858370, 2.294481);
         mapController.setCenter(startPoint);
 
@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             if (lastKnownLocation != null) {
                 val userLocation = GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude)
                 mapView.controller.setCenter(userLocation)
-                mapView.controller.setZoom(17.0)
+                mapView.controller.setZoom(20.0)
             }
         }
     }
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
         locationService.locationUpdates.observe(this) { location ->
             val userLocation = GeoPoint(location.latitude, location.longitude)
             mapView.controller.animateTo(userLocation)
-            mapView.controller.setZoom(17.0)
+            mapView.controller.setZoom(20.0)
         }
     }
 
