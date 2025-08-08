@@ -1,5 +1,6 @@
 package com.hereliesaz.dumbwifinder.services
 
+import org.jsoup.Jsoup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
