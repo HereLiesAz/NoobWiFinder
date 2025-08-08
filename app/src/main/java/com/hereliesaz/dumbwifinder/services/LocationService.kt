@@ -5,25 +5,24 @@ import android.content.Context
 import android.location.Location
 import android.location.Address
 import android.location.Geocoder
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import android.location.LocationManager
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.*
 
 class LocationService(private val context: Context) {
 
-    private val fusedLocationClient: FusedLocationProviderClient =
-        LocationServices.getFusedLocationProviderClient(context)
+    private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val geocoder = Geocoder(context, Locale.getDefault())
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(): Location? {
-        return try {
-            fusedLocationClient.lastLocation.await()
-        } catch (e: Exception) {
-            null
+        return withContext(Dispatchers.IO) {
+            try {
+                locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 

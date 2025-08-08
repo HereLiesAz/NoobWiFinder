@@ -1,5 +1,6 @@
 package com.hereliesaz.dumbwifinder.services
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -20,6 +21,7 @@ class WifiService(private val context: Context) {
         return if (wifiManager.isWifiEnabled) {
             suspendCoroutine { continuation ->
                 val wifiScanReceiver = object : BroadcastReceiver() {
+                    @SuppressLint("MissingPermission")
                     override fun onReceive(context: Context, intent: Intent) {
                         if (intent.action == WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) {
                             context.unregisterReceiver(this)
@@ -44,19 +46,4 @@ class WifiService(private val context: Context) {
         }
     }
 
-    @Suppress("DEPRECATION")
-    fun connectToWifi(ssid: String, password: String): Boolean {
-        val wifiConfig = WifiConfiguration()
-        wifiConfig.SSID = "\"$ssid\""
-        wifiConfig.preSharedKey = "\"$password\""
-
-        val netId = wifiManager.addNetwork(wifiConfig)
-        if (netId == -1) {
-            return false
-        }
-
-        wifiManager.disconnect()
-        wifiManager.enableNetwork(netId, true)
-        return wifiManager.reconnect()
-    }
 }
