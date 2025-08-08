@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder.services
+package com.hereliesaz.noobwifinder.services
 
 import android.annotation.SuppressLint
 import android.content.Context

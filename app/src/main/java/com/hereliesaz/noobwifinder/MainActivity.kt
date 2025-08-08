@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder
+package com.hereliesaz.noobwifinder
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -10,8 +10,8 @@ import androidx.core.app.ActivityCompat
 import android.content.Context
 import android.location.LocationManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hereliesaz.dumbwifinder.databinding.ActivityMainBinding
-import com.hereliesaz.dumbwifinder.services.LocationService
+import com.hereliesaz.noobwifinder.databinding.ActivityMainBinding
+import com.hereliesaz.noobwifinder.services.LocationService
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView

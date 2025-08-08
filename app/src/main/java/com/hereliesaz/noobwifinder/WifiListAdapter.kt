@@ -1,11 +1,11 @@
-package com.hereliesaz.dumbwifinder
+package com.hereliesaz.noobwifinder
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
+import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 
 class WifiListAdapter(private var dataSet: List<WifiNetworkInfo>) :
     RecyclerView.Adapter<WifiListAdapter.ViewHolder>() {

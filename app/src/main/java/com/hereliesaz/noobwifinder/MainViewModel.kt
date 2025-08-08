@@ -1,16 +1,16 @@
-package com.hereliesaz.dumbwifinder
+package com.hereliesaz.noobwifinder
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.hereliesaz.dumbwifinder.data.CrackingStatus
-import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
-import com.hereliesaz.dumbwifinder.utils.PasswordGenerator
+import com.hereliesaz.noobwifinder.data.CrackingStatus
+import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
+import com.hereliesaz.noobwifinder.utils.PasswordGenerator
 import org.osmdroid.util.GeoPoint
-import com.hereliesaz.dumbwifinder.services.LocationService
-import com.hereliesaz.dumbwifinder.services.WifiService
+import com.hereliesaz.noobwifinder.services.LocationService
+import com.hereliesaz.noobwifinder.services.WifiService
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

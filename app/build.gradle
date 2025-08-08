@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace "com.hereliesaz.dumbwifinder"
+    namespace "com.hereliesaz.noobwifinder"
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.hereliesaz.dumbwifinder"
+        applicationId "com.hereliesaz.noobwifinder"
         minSdk 24
         targetSdk 34
         versionCode 1

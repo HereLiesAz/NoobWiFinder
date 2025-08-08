@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder.services
+package com.hereliesaz.noobwifinder.services
 
 import android.content.BroadcastReceiver
 import android.content.Context

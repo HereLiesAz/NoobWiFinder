@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder.data
+package com.hereliesaz.noobwifinder.data
 
 import org.osmdroid.util.GeoPoint
 
