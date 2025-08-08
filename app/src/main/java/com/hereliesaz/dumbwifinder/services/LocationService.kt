@@ -10,10 +10,33 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import android.location.LocationListener
+
 class LocationService(private val context: Context) {
 
     private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val geocoder = Geocoder(context, Locale.getDefault())
+    private val _locationUpdates = MutableLiveData<Location>()
+    val locationUpdates: LiveData<Location> = _locationUpdates
+
+    private val locationListener = LocationListener { location ->
+        _locationUpdates.postValue(location)
+    }
+
+    @SuppressLint("MissingPermission")
+    fun startLocationUpdates() {
+        try {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, locationListener)
+        } catch (e: Exception) {
+            // Handle exception
+        }
+    }
+
+    fun stopLocationUpdates() {
+        locationManager.removeUpdates(locationListener)
+    }
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(): Location? {

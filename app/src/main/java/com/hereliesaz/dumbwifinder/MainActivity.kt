@@ -11,6 +11,7 @@ import android.content.Context
 import android.location.LocationManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hereliesaz.dumbwifinder.databinding.ActivityMainBinding
+import com.hereliesaz.dumbwifinder.services.LocationService
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var wifiListAdapter: WifiListAdapter
     private lateinit var mapView: MapView
+    private lateinit var locationService: LocationService
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -42,14 +44,18 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        locationService = LocationService(this)
 
         mapView = binding.mapView
         mapView.setMultiTouchControls(true)
 
         setupRecyclerView()
         observeViewModel()
+        observeLocationUpdates()
         checkAndRequestLocationPermission()
         setupMap()
 
@@ -99,6 +105,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupMap() {
+        val mapController = mapView.controller
+        mapController.setZoom(9.5)
+        val startPoint = GeoPoint(48.858370, 2.294481);
+        mapController.setCenter(startPoint);
+
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -111,13 +122,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeLocationUpdates() {
+        locationService.locationUpdates.observe(this) { location ->
+            val userLocation = GeoPoint(location.latitude, location.longitude)
+            mapView.controller.animateTo(userLocation)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationService.startLocationUpdates()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         mapView.onPause()
+        locationService.stopLocationUpdates()
     }
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.hereliesaz.dumbwifinder.data.CrackingStatus
 import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
+import com.hereliesaz.dumbwifinder.utils.PasswordGenerator
 import org.osmdroid.util.GeoPoint
 import com.hereliesaz.dumbwifinder.services.LocationService
 import com.hereliesaz.dumbwifinder.services.WifiService
@@ -68,10 +69,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (crackingJob?.isCancelled == true) break
                 networkInfo.status = CrackingStatus.IN_PROGRESS
                 _wifiList.postValue(wifiNetworkInfos)
-                delay(1000) // Simulate work
 
-                networkInfo.status = CrackingStatus.FAIL
-                _wifiList.postValue(wifiNetworkInfos)
+                val passwords = PasswordGenerator.generatePasswords(networkInfo.ssid, null) // Assuming no phone number for now
+                for (password in passwords) {
+                    if (crackingJob?.isCancelled == true) break
+                    networkInfo.password = password
+                    _wifiList.postValue(wifiNetworkInfos)
+                    delay(100) // Simulate trying a password
+                }
+
+                if (crackingJob?.isCancelled != true) {
+                    networkInfo.status = CrackingStatus.FAIL
+                    networkInfo.password = null // Clear password
+                    _wifiList.postValue(wifiNetworkInfos)
+                }
             }
 
             _logMessages.postValue("Cracking process finished.")
