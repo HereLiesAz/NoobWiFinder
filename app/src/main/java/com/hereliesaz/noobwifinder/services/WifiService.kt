@@ -30,7 +30,7 @@ class WifiService(private val context: Context) {
                             ) {
                                 continuation.resume(wifiManager.scanResults)
                             } else {
-                                continuation.resume(emptyList())
+                                throw SecurityException("Missing required permission: ACCESS_FINE_LOCATION")
                             }
                         }
                     }

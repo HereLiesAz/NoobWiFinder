@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="TextAppearance.M3.DisplayLarge" parent="TextAppearance.AppCompat.Display3">
+    <style name="TextAppearance.M3.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textSize">57sp</item>
     </style>
-    <style name="TextAppearance.M3.HeadlineLarge" parent="TextAppearance.AppCompat.Headline">
+    <style name="TextAppearance.M3.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textSize">32sp</item>
     </style>
-    <style name="TextAppearance.M3.TitleLarge" parent="TextAppearance.AppCompat.Title">
+    <style name="TextAppearance.M3.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">22sp</item>
     </style>
-    <style name="TextAppearance.M3.BodyLarge" parent="TextAppearance.AppCompat.Body2">
+    <style name="TextAppearance.M3.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textSize">16sp</item>
     </style>
-    <style name="TextAppearance.M3.LabelLarge" parent="TextAppearance.AppCompat.Button">
+    <style name="TextAppearance.M3.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textSize">14sp</item>
     </style>
