@@ -2,7 +2,7 @@
     <!-- Base application theme. -->
     <style name="Theme.Geministrator" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/highlight_green</item>
+        <item name="colorPrimary">@android:color/transparent</item>
         <item name="colorOnPrimary">@color/on_primary_text</item>
 
         <!-- Secondary brand color. -->
