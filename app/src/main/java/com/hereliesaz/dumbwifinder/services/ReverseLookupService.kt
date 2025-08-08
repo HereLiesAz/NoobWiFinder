@@ -1,8 +1,7 @@
-package com.hereliesaz.dumbwifinder.`2`
+package com.hereliesaz.dumbwifinder.services
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jsoup.Jsoup
 
 class ReverseLookupService {
 
@@ -11,7 +10,8 @@ class ReverseLookupService {
             try {
                 // The URL and selector are based on the original code.
                 // This might need to be updated if the website structure changes.
-                val url = "https://smartbackgroundchecks.com/people?name=${address.replace(" ", "+")}"
+                val url =
+                    "https://smartbackgroundchecks.com/people?name=${address.replace(" ", "+")}"
                 val doc = Jsoup.connect(url).get()
                 val phoneElement = doc.select(".phone-number").first()
                 phoneElement?.text()

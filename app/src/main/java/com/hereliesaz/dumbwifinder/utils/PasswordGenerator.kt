@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder.`2`
+package com.hereliesaz.dumbwifinder.utils
 
 object PasswordGenerator {
 
