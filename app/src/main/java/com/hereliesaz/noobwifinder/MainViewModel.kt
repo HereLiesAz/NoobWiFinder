@@ -11,6 +11,7 @@ import com.hereliesaz.noobwifinder.utils.PasswordGenerator
 import org.osmdroid.util.GeoPoint
 import com.hereliesaz.noobwifinder.services.LocationService
 import com.hereliesaz.noobwifinder.services.WifiService
+import com.hereliesaz.noobwifinder.services.WifiScanResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -53,40 +54,46 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val geoPoint = GeoPoint(location.latitude, location.longitude)
             _logMessages.postValue("Got location: ${geoPoint.latitude}, ${geoPoint.longitude}")
 
-            val wifiNetworks = wifiService.scanForWifiNetworks()
-            val wifiNetworkInfos = wifiNetworks.map {
-                WifiNetworkInfo(
-                    ssid = it.SSID,
-                    bssid = it.BSSID,
-                    signalStrength = it.level,
-                    securityType = it.capabilities,
-                    location = geoPoint
-                )
-            }
-            _wifiList.postValue(wifiNetworkInfos)
-
-            for (networkInfo in wifiNetworkInfos) {
-                if (crackingJob?.isCancelled == true) break
-                networkInfo.status = CrackingStatus.IN_PROGRESS
-                _wifiList.postValue(wifiNetworkInfos)
-
-                val passwords = PasswordGenerator.generatePasswords(networkInfo.ssid, null) // Assuming no phone number for now
-                for (password in passwords) {
-                    if (crackingJob?.isCancelled == true) break
-                    networkInfo.password = password
+            when (val scanResult = wifiService.scanForWifiNetworks()) {
+                is WifiScanResult.Success -> {
+                    val wifiNetworkInfos = scanResult.results.map {
+                        WifiNetworkInfo(
+                            ssid = it.SSID,
+                            bssid = it.BSSID,
+                            signalStrength = it.level,
+                            securityType = it.capabilities,
+                            location = geoPoint
+                        )
+                    }
                     _wifiList.postValue(wifiNetworkInfos)
-                    delay(100) // Simulate trying a password
-                }
 
-                if (crackingJob?.isCancelled != true) {
-                    networkInfo.status = CrackingStatus.FAIL
-                    networkInfo.password = null // Clear password
-                    _wifiList.postValue(wifiNetworkInfos)
+                    for (networkInfo in wifiNetworkInfos) {
+                        if (crackingJob?.isCancelled == true) break
+                        networkInfo.status = CrackingStatus.IN_PROGRESS
+                        _wifiList.postValue(wifiNetworkInfos)
+
+                        val passwords = PasswordGenerator.generatePasswords(networkInfo.ssid, null) // Assuming no phone number for now
+                        for (password in passwords) {
+                            if (crackingJob?.isCancelled == true) break
+                            networkInfo.password = password
+                            _wifiList.postValue(wifiNetworkInfos)
+                            delay(100) // Simulate trying a password
+                        }
+
+                        if (crackingJob?.isCancelled != true) {
+                            networkInfo.status = CrackingStatus.FAIL
+                            networkInfo.password = null // Clear password
+                            _wifiList.postValue(wifiNetworkInfos)
+                        }
+                    }
+                    _logMessages.postValue("Cracking process finished.")
+                    _isCracking.postValue(false)
+                }
+                is WifiScanResult.PermissionDenied -> {
+                    _logMessages.postValue("Permission denied to scan for Wi-Fi networks.")
+                    _isCracking.postValue(false)
                 }
             }
-
-            _logMessages.postValue("Cracking process finished.")
-            _isCracking.postValue(false)
         }
     }
 

@@ -2,19 +2,24 @@ package com.hereliesaz.noobwifinder.services
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.net.wifi.ScanResult
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+sealed class WifiScanResult {
+    data class Success(val results: List<ScanResult>) : WifiScanResult()
+    object PermissionDenied : WifiScanResult()
+}
+
 class WifiService(private val context: Context) {
 
     private val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
-    suspend fun scanForWifiNetworks(): List<ScanResult> {
+    suspend fun scanForWifiNetworks(): WifiScanResult {
         // Note: For newer Android versions, a more modern approach using NetworkManager is recommended.
         // This implementation uses the older WifiManager for simplicity and to match the original code.
         return if (wifiManager.isWifiEnabled) {
@@ -28,9 +33,9 @@ class WifiService(private val context: Context) {
                                     android.Manifest.permission.ACCESS_FINE_LOCATION
                                 ) == android.content.pm.PackageManager.PERMISSION_GRANTED
                             ) {
-                                continuation.resume(wifiManager.scanResults)
+                                continuation.resume(WifiScanResult.Success(wifiManager.scanResults))
                             } else {
-                                throw SecurityException("Missing required permission: ACCESS_FINE_LOCATION")
+                                continuation.resume(WifiScanResult.PermissionDenied)
                             }
                         }
                     }
@@ -44,11 +49,11 @@ class WifiService(private val context: Context) {
                 val success = wifiManager.startScan()
                 if (!success) {
                     context.unregisterReceiver(wifiScanReceiver)
-                    continuation.resume(emptyList())
+                    continuation.resume(WifiScanResult.Success(emptyList()))
                 }
             }
         } else {
-            emptyList()
+            return WifiScanResult.Success(emptyList())
         }
     }
 
