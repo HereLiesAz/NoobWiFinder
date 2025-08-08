@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiListAdapter: WifiListAdapter
     private lateinit var mapView: MapView
     private lateinit var locationService: LocationService
-    private lateinit var drawerToggle: ActionBarDrawerToggle
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -53,15 +52,15 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.toolbar)
-        drawerToggle = ActionBarDrawerToggle(this, binding.drawerLayout, R.string.drawer_open, R.string.drawer_close)
-        binding.drawerLayout.addDrawerListener(drawerToggle)
-        drawerToggle.syncState()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.mipmap.ic_launcher)
+        binding.toolbar.setNavigationOnClickListener {
+            binding.drawerLayout.openDrawer(GravityCompat.START)
+        }
 
         binding.navView.getHeaderView(0).findViewById<ImageView>(R.id.nav_header_icon).setOnClickListener {
             binding.drawerLayout.closeDrawer(GravityCompat.START)
         }
-
 
         locationService = LocationService(this)
 
@@ -160,10 +159,4 @@ class MainActivity : AppCompatActivity() {
         locationService.stopLocationUpdates()
     }
 
-    override fun onOptionsItemSelected(item: android.view.MenuItem): Boolean {
-        if (drawerToggle.onOptionsItemSelected(item)) {
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
 }

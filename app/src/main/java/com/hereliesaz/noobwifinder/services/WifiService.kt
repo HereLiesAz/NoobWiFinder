@@ -23,7 +23,15 @@ class WifiService(private val context: Context) {
                     override fun onReceive(context: Context, intent: Intent) {
                         if (intent.action == WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) {
                             context.unregisterReceiver(this)
-                            continuation.resume(wifiManager.scanResults)
+                            if (androidx.core.app.ActivityCompat.checkSelfPermission(
+                                    context,
+                                    android.Manifest.permission.ACCESS_FINE_LOCATION
+                                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            ) {
+                                continuation.resume(wifiManager.scanResults)
+                            } else {
+                                continuation.resume(emptyList())
+                            }
                         }
                     }
                 }

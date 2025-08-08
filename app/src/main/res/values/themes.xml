@@ -1,31 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="AppTheme.Expressive" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/expressive_primary</item>
-        <item name="colorOnPrimary">@color/expressive_onPrimary</item>
-        <item name="colorPrimaryContainer">@color/expressive_primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/expressive_onPrimaryContainer</item>
-        <item name="colorSecondary">@color/expressive_secondary</item>
-        <item name="colorOnSecondary">@color/expressive_onSecondary</item>
-        <item name="colorSecondaryContainer">@color/expressive_secondaryContainer</item>
-        <item name="colorOnSecondaryContainer">@color/expressive_onSecondaryContainer</item>
-        <item name="colorTertiary">@color/expressive_tertiary</item>
-        <item name="colorOnTertiary">@color/expressive_onTertiary</item>
-        <item name="colorTertiaryContainer">@color/expressive_tertiaryContainer</item>
-        <item name="colorOnTertiaryContainer">@color/expressive_onTertiaryContainer</item>
-        <item name="colorError">@color/expressive_error</item>
-        <item name="colorOnError">@color/expressive_onError</item>
-        <item name="colorErrorContainer">@color/expressive_errorContainer</item>
-        <item name="colorOnErrorContainer">@color/expressive_onErrorContainer</item>
-        <item name="android:colorBackground">@color/expressive_background</item>
-        <item name="colorOnBackground">@color/expressive_onBackground</item>
-        <item name="colorSurface">@color/expressive_surface</item>
-        <item name="colorOnSurface">@color/expressive_onSurface</item>
-        <item name="colorSurfaceVariant">@color/expressive_surfaceVariant</item>
-        <item name="colorOnSurfaceVariant">@color/expressive_onSurfaceVariant</item>
-        <item name="colorOutline">@color/expressive_outline</item>
-        <item name="colorSurfaceInverse">@color/expressive_inverseSurface</item>
-        <item name="colorOnSurfaceInverse">@color/expressive_inverseOnSurface</item>
-        <item name="colorPrimaryInverse">@color/expressive_inversePrimary</item>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Geministrator" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/highlight_green</item>
+        <item name="colorOnPrimary">@color/on_primary_text</item>
+
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/highlight_green</item>
+        <item name="colorOnSecondary">@color/on_secondary_text</item>
+
+        <!-- Background and surface colors. -->
+        <item name="android:colorBackground">@color/dark_grey_background</item>
+        <item name="colorSurface">@color/dark_grey_surface</item>
+        <item name="colorOnBackground">@color/on_primary_text</item>
+        <item name="colorOnSurface">@color/on_primary_text</item>
+
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/dark_grey_background</item>
+
+        <!-- Typography. -->
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.M3.DisplayLarge</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.M3.HeadlineLarge</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.M3.TitleLarge</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.M3.BodyLarge</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.M3.LabelLarge</item>
     </style>
 </resources>
