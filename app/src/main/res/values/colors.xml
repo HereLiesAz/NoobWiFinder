@@ -1,9 +1,30 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3700B3</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC6</color>
-
-    <color name="black">#FF000000</color>
+    <color name="expressive_primary">#FFB300</color>
+    <color name="expressive_onPrimary">#432C00</color>
+    <color name="expressive_primaryContainer">#604100</color>
+    <color name="expressive_onPrimaryContainer">#FFDEAD</color>
+    <color name="expressive_secondary">#DDC2A1</color>
+    <color name="expressive_onSecondary">#3E2D16</color>
+    <color name="expressive_secondaryContainer">#56442A</color>
+    <color name="expressive_onSecondaryContainer">#FADEBC</color>
+    <color name="expressive_tertiary">#B8CEA1</color>
+    <color name="expressive_onTertiary">#243515</color>
+    <color name="expressive_tertiaryContainer">#3A4C2A</color>
+    <color name="expressive_onTertiaryContainer">#D3EABC</color>
+    <color name="expressive_error">#FFB4AB</color>
+    <color name="expressive_onError">#690005</color>
+    <color name="expressive_errorContainer">#93000A</color>
+    <color name="expressive_onErrorContainer">#FFB4AB</color>
+    <color name="expressive_background">#1F1B16</color>
+    <color name="expressive_onBackground">#EAE1D9</color>
+    <color name="expressive_surface">#1F1B16</color>
+    <color name="expressive_onSurface">#EAE1D9</color>
+    <color name="expressive_surfaceVariant">#4F4539</color>
+    <color name="expressive_onSurfaceVariant">#D3C4B4</color>
+    <color name="expressive_outline">#9C8F80</color>
+    <color name="expressive_inverseSurface">#EAE1D9</color>
+    <color name="expressive_inverseOnSurface">#35302A</color>
+    <color name="expressive_inversePrimary">#7D5700</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
 </resources>

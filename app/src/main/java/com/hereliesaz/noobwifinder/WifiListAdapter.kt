@@ -3,6 +3,7 @@ package com.hereliesaz.noobwifinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
@@ -33,6 +34,7 @@ class WifiListAdapter(private var dataSet: List<WifiNetworkInfo>) :
         viewHolder.securityText.text = "Security: ${wifiInfo.securityType}"
         viewHolder.statusText.text = "Status: ${wifiInfo.status}"
         viewHolder.triedPasswordText.text = "Trying: ${wifiInfo.password ?: ""}"
+        viewHolder.itemView.startAnimation(AnimationUtils.loadAnimation(viewHolder.itemView.context, R.anim.fade_in))
     }
 
     override fun getItemCount() = dataSet.size
