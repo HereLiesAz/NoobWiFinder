@@ -1,11 +1,11 @@
-package com.hereliesaz.dumbwifinder
+package com.hereliesaz.noobwifinder
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
+import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 
 class WifiListAdapter(private var dataSet: List<WifiNetworkInfo>) :
     RecyclerView.Adapter<WifiListAdapter.ViewHolder>() {
@@ -16,6 +16,7 @@ class WifiListAdapter(private var dataSet: List<WifiNetworkInfo>) :
         val signalStrengthText: TextView = view.findViewById(R.id.signal_strength_text)
         val securityText: TextView = view.findViewById(R.id.security_text)
         val statusText: TextView = view.findViewById(R.id.status_text)
+        val triedPasswordText: TextView = view.findViewById(R.id.tried_password)
     }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
@@ -31,6 +32,7 @@ class WifiListAdapter(private var dataSet: List<WifiNetworkInfo>) :
         viewHolder.signalStrengthText.text = "Signal: ${wifiInfo.signalStrength} dBm"
         viewHolder.securityText.text = "Security: ${wifiInfo.securityType}"
         viewHolder.statusText.text = "Status: ${wifiInfo.status}"
+        viewHolder.triedPasswordText.text = "Trying: ${wifiInfo.password ?: ""}"
     }
 
     override fun getItemCount() = dataSet.size

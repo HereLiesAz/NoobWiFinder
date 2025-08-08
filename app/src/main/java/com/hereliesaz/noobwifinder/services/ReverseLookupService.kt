@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder.services
+package com.hereliesaz.noobwifinder.services
 
 import org.jsoup.Jsoup
 import kotlinx.coroutines.Dispatchers

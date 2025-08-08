@@ -1,4 +1,4 @@
-package com.hereliesaz.dumbwifinder
+package com.hereliesaz.noobwifinder
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -10,7 +10,8 @@ import androidx.core.app.ActivityCompat
 import android.content.Context
 import android.location.LocationManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hereliesaz.dumbwifinder.databinding.ActivityMainBinding
+import com.hereliesaz.noobwifinder.databinding.ActivityMainBinding
+import com.hereliesaz.noobwifinder.services.LocationService
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     private lateinit var wifiListAdapter: WifiListAdapter
     private lateinit var mapView: MapView
+    private lateinit var locationService: LocationService
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -46,11 +48,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        locationService = LocationService(this)
+
         mapView = binding.mapView
         mapView.setMultiTouchControls(true)
 
         setupRecyclerView()
         observeViewModel()
+        observeLocationUpdates()
         checkAndRequestLocationPermission()
         setupMap()
 
@@ -117,13 +122,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeLocationUpdates() {
+        locationService.locationUpdates.observe(this) { location ->
+            val userLocation = GeoPoint(location.latitude, location.longitude)
+            mapView.controller.animateTo(userLocation)
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         mapView.onResume()
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationService.startLocationUpdates()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         mapView.onPause()
+        locationService.stopLocationUpdates()
     }
 }
