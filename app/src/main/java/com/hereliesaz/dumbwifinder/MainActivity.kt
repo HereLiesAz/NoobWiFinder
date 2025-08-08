@@ -3,24 +3,22 @@ package com.hereliesaz.dumbwifinder
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Button
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.hereliesaz.dumbwifinder.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var wifiListView: RecyclerView
-    private lateinit var startStopButton: Button
     private var googleMap: GoogleMap? = null
     private val viewModel: MainViewModel by viewModels()
     private lateinit var wifiListAdapter: WifiListAdapter
+    private lateinit var binding: ActivityMainBinding
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -42,24 +40,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        wifiListView = findViewById(R.id.wifi_list)
-        startStopButton = findViewById(R.id.start_stop_button)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         setupRecyclerView()
         observeViewModel()
         requestLocationPermission()
 
-        startStopButton.setOnClickListener {
+        binding.startStopButton.setOnClickListener {
             viewModel.startStopCracking()
         }
     }
 
     private fun setupRecyclerView() {
         wifiListAdapter = WifiListAdapter(emptyList())
-        wifiListView.adapter = wifiListAdapter
-        wifiListView.layoutManager = LinearLayoutManager(this)
+        binding.wifiList.adapter = wifiListAdapter
+        binding.wifiList.layoutManager = LinearLayoutManager(this)
     }
 
     private fun observeViewModel() {
@@ -72,7 +68,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         viewModel.isCracking.observe(this) { isCracking ->
-            startStopButton.text = if (isCracking) "Stop" else "Start"
+            binding.startStopButton.text = if (isCracking) "Stop" else "Start"
         }
     }
 

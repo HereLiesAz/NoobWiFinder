@@ -10,6 +10,7 @@ import com.hereliesaz.dumbwifinder.data.WifiNetworkInfo
 import com.hereliesaz.dumbwifinder.services.LocationService
 import com.hereliesaz.dumbwifinder.services.ReverseLookupService
 import com.hereliesaz.dumbwifinder.services.WifiService
+import android.os.Build
 import com.hereliesaz.dumbwifinder.utils.LogUtil
 import com.hereliesaz.dumbwifinder.utils.PasswordGenerator
 import kotlinx.coroutines.Job
@@ -54,7 +55,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _logMessages.postValue("Got location: ${location.latitude}, ${location.longitude}")
 
             val wifiNetworks = wifiService.scanForWifiNetworks()
-            val wifiNetworkInfos = wifiNetworks.map { WifiNetworkInfo(it.SSID, it.level) }
+            val wifiNetworkInfos = wifiNetworks.map {
+                val ssid = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    it.wifiSsid?.toString() ?: ""
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.SSID
+                }
+                WifiNetworkInfo(ssid, it.level)
+            }
             _wifiList.postValue(wifiNetworkInfos)
 
             val nearbyAddresses = locationService.getNearbyAddresses(location)
