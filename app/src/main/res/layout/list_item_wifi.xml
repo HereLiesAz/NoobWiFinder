@@ -1,31 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:padding="8dp">
 
     <TextView
         android:id="@+id/ssid_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/signal_strength_text"
         android:text="SSID"
         android:textSize="16sp"
         android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/bssid_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="BSSID" />
+
+    <TextView
         android:id="@+id/signal_strength_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:text="Signal" />
+
+    <TextView
+        android:id="@+id/security_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Security" />
 
     <TextView
         android:id="@+id/status_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/ssid_text"
         android:text="Status: PENDING" />
 
-</RelativeLayout>
+</LinearLayout>
