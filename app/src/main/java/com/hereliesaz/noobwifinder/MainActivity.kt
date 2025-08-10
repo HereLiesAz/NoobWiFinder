@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import android.content.Context
 import android.location.LocationManager
@@ -17,21 +16,12 @@ import com.hereliesaz.noobwifinder.services.LocationService
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import android.widget.ImageView
-import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.GravityCompat
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-
-import com.google.android.material.button.MaterialButton
 import androidx.core.content.ContextCompat
-
 import android.content.Intent
-import android.content.SharedPreferences
-import com.google.android.material.navigation.NavigationView
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
-import android.util.Log
+import org.osmdroid.util.BoundingBox
 
 class MainActivity : AppCompatActivity() {
 
@@ -50,8 +40,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var passwordListAdapter: PasswordListAdapter
     private lateinit var mapView: MapView
     private lateinit var locationService: LocationService
-    private var isManualLocationMode = false
-    private lateinit var sharedPrefs: SharedPreferences
 
     private val locationPermissionRequest = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
@@ -77,8 +65,15 @@ class MainActivity : AppCompatActivity() {
                 val lat = it.getDoubleExtra(ChooseLocationActivity.EXTRA_LATITUDE, 0.0)
                 val lon = it.getDoubleExtra(ChooseLocationActivity.EXTRA_LONGITUDE, 0.0)
                 if (lat != 0.0 && lon != 0.0) {
-                    val manualPoint = GeoPoint(lat, lon)
-                    setManualLocation(manualPoint)
+                    val point = GeoPoint(lat, lon)
+                    val boundingBox = BoundingBox(
+                        point.latitude + 0.009,
+                        point.longitude + 0.009,
+                        point.latitude - 0.009,
+                        point.longitude - 0.009
+                    )
+                    viewModel.onMapBoundsChanged(boundingBox)
+                    mapView.controller.setCenter(point)
                 }
             }
         }
@@ -90,9 +85,6 @@ class MainActivity : AppCompatActivity() {
         Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        sharedPrefs = getSharedPreferences("app_prefs", MODE_PRIVATE)
-        isManualLocationMode = sharedPrefs.getBoolean("manual_mode", false)
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -108,12 +100,8 @@ class MainActivity : AppCompatActivity() {
         binding.navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.nav_choose_location -> {
-                    if (isManualLocationMode) {
-                        setAutomaticLocationMode()
-                    } else {
-                        val intent = Intent(this, ChooseLocationActivity::class.java)
-                        chooseLocationLauncher.launch(intent)
-                    }
+                    val intent = Intent(this, ChooseLocationActivity::class.java)
+                    chooseLocationLauncher.launch(intent)
                     true
                 }
                 else -> false
@@ -124,6 +112,7 @@ class MainActivity : AppCompatActivity() {
 
         mapView = binding.mapView
         mapView.setMultiTouchControls(false)
+        mapView.setOnTouchListener { _, _ -> true }
 
         setupRecyclerViews()
         observeViewModel()
@@ -133,6 +122,10 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.startStopButton.setOnClickListener {
+            viewModel.startStopCracking()
+        }
+
+        binding.mapCard.setOnClickListener {
             viewModel.startStopCracking()
         }
 
@@ -218,6 +211,11 @@ class MainActivity : AppCompatActivity() {
                 binding.startStopButton.backgroundTintList = ContextCompat.getColorStateList(this, R.color.muted_green)
             }
         }
+
+        viewModel.isGeneratingFromLocation.observe(this) { isGenerating ->
+            binding.startStopButton.isEnabled = !isGenerating
+            binding.mapCard.isEnabled = !isGenerating
+        }
     }
 
     private fun checkAndRequestLocationPermission() {
@@ -229,98 +227,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleMapChange() {
-        val boundingBox = mapView.boundingBox
-        Log.d("MainActivity", "Map bounds changed: $boundingBox")
-        // TODO: Debounce this call to avoid excessive processing
-        viewModel.onMapBoundsChanged(boundingBox)
-    }
-
     private fun setupMap() {
         val mapController = mapView.controller
         mapController.setZoom(20.0)
 
-        if (isManualLocationMode) {
-            val lat = sharedPrefs.getFloat("manual_lat", 0.0f).toDouble()
-            val lon = sharedPrefs.getFloat("manual_lon", 0.0f).toDouble()
-            if (lat != 0.0 && lon != 0.0) {
-                mapController.setCenter(GeoPoint(lat, lon))
+        val startPoint = GeoPoint(48.858370, 2.294481);
+        mapController.setCenter(startPoint);
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            if (lastKnownLocation != null) {
+                val userLocation = GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude)
+                mapView.controller.setCenter(userLocation)
             }
-            updateMenuForManualMode(true)
-        } else {
-            val startPoint = GeoPoint(48.858370, 2.294481);
-            mapController.setCenter(startPoint);
-            val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (lastKnownLocation != null) {
-                    val userLocation = GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude)
-                    mapView.controller.setCenter(userLocation)
-                }
-            }
-            updateMenuForManualMode(false)
         }
-
-        mapView.addMapListener(object : MapListener {
-            override fun onScroll(event: ScrollEvent?): Boolean {
-                handleMapChange()
-                return true
-            }
-
-            override fun onZoom(event: ZoomEvent?): Boolean {
-                handleMapChange()
-                return true
-            }
-        })
     }
 
     private fun observeLocationUpdates() {
         locationService.locationUpdates.observe(this) { location ->
-            if (!isManualLocationMode) {
-                val userLocation = GeoPoint(location.latitude, location.longitude)
-                mapView.controller.animateTo(userLocation)
-                mapView.controller.setZoom(20.0)
-            }
+            val userLocation = GeoPoint(location.latitude, location.longitude)
+            mapView.controller.animateTo(userLocation)
+            mapView.controller.setZoom(20.0)
         }
-    }
-
-    private fun setManualLocation(point: GeoPoint) {
-        isManualLocationMode = true
-        locationService.stopLocationUpdates()
-        mapView.controller.setCenter(point)
-        with(sharedPrefs.edit()) {
-            putBoolean("manual_mode", true)
-            putFloat("manual_lat", point.latitude.toFloat())
-            putFloat("manual_lon", point.longitude.toFloat())
-            apply()
-        }
-        updateMenuForManualMode(true)
-    }
-
-    private fun setAutomaticLocationMode() {
-        isManualLocationMode = false
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationService.startLocationUpdates()
-        }
-        with(sharedPrefs.edit()) {
-            putBoolean("manual_mode", false)
-            apply()
-        }
-        updateMenuForManualMode(false)
-    }
-
-    private fun updateMenuForManualMode(isManual: Boolean) {
-        val menuItem = binding.navView.menu.findItem(R.id.nav_choose_location)
-        menuItem.title = if (isManual) "Auto-Locate" else "Choose Location"
     }
 
     override fun onResume() {
         super.onResume()
         mapView.onResume()
-        if (!isManualLocationMode && (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationService.startLocationUpdates()
         }
     }
@@ -330,5 +266,4 @@ class MainActivity : AppCompatActivity() {
         mapView.onPause()
         locationService.stopLocationUpdates()
     }
-
 }
