@@ -25,13 +25,6 @@ import org.osmdroid.util.BoundingBox
 
 class MainActivity : AppCompatActivity() {
 
-    private enum class SelectionState {
-        DEFAULT,
-        WIFI,
-        PASSWORD,
-        LOG
-    }
-
     private var currentSelection = SelectionState.DEFAULT
 
     private lateinit var binding: ActivityMainBinding
@@ -182,14 +175,39 @@ class MainActivity : AppCompatActivity() {
     private fun observeViewModel() {
         viewModel.wifiList.observe(this) { wifiList ->
             wifiListAdapter.updateData(wifiList)
-            mapView.overlays.clear()
+
+            val markerMap = mapView.getTag(R.id.marker_map) as? MutableMap<String, Marker>
+                ?: mutableMapOf<String, Marker>().also {
+                    mapView.setTag(R.id.marker_map, it)
+                }
+
+            val wifiSsids = wifiList.map { it.ssid }.toSet()
+            val obsoleteMarkers = markerMap.keys.filter { it !in wifiSsids }
+            obsoleteMarkers.forEach { ssid ->
+                val marker = markerMap[ssid]
+                if (marker != null) {
+                    mapView.overlays.remove(marker)
+                    markerMap.remove(ssid)
+                }
+            }
+
             wifiList.forEach { wifiInfo ->
-                val marker = Marker(mapView)
-                marker.position = wifiInfo.location
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                marker.title = wifiInfo.ssid
-                marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
-                mapView.overlays.add(marker)
+                val existingMarker = markerMap[wifiInfo.ssid]
+                if (existingMarker != null) {
+                    if (existingMarker.position != wifiInfo.location ||
+                        existingMarker.snippet != "Strength: ${wifiInfo.signalStrength} dBm") {
+                        existingMarker.position = wifiInfo.location
+                        existingMarker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                    }
+                } else {
+                    val marker = Marker(mapView)
+                    marker.position = wifiInfo.location
+                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    marker.title = wifiInfo.ssid
+                    marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                    mapView.overlays.add(marker)
+                    markerMap[wifiInfo.ssid] = marker
+                }
             }
             mapView.invalidate()
         }

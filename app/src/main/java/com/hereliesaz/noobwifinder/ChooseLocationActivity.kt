@@ -6,7 +6,11 @@ import android.location.Geocoder
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.hereliesaz.noobwifinder.databinding.ActivityChooseLocationBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -28,6 +32,7 @@ class ChooseLocationActivity : AppCompatActivity() {
 
         setupMap()
         setupButtons()
+        binding.saveButton.isEnabled = selectedPoint != null
     }
 
     private fun setupMap() {
@@ -50,6 +55,7 @@ class ChooseLocationActivity : AppCompatActivity() {
             override fun onMarkerDrag(marker: Marker) {}
             override fun onMarkerDragEnd(marker: Marker) {
                 selectedPoint = marker.position
+                binding.saveButton.isEnabled = true
             }
             override fun onMarkerDragStart(marker: Marker) {}
         })
@@ -85,22 +91,27 @@ class ChooseLocationActivity : AppCompatActivity() {
             return
         }
 
-        try {
-            val geocoder = Geocoder(this)
-            val addresses = geocoder.getFromLocationName(addressText, 1)
-            if (addresses != null && addresses.isNotEmpty()) {
-                val address = addresses[0]
-                val geoPoint = GeoPoint(address.latitude, address.longitude)
-                selectedPoint = geoPoint
-                mapView.controller.animateTo(geoPoint)
-                mapView.controller.setZoom(15.0)
-                locationMarker.position = geoPoint
-                mapView.invalidate()
-            } else {
-                Toast.makeText(this, "Address not found", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            try {
+                val geocoder = Geocoder(this@ChooseLocationActivity)
+                val addresses = withContext(Dispatchers.IO) {
+                    geocoder.getFromLocationName(addressText, 1)
+                }
+                if (addresses != null && addresses.isNotEmpty()) {
+                    val address = addresses[0]
+                    val geoPoint = GeoPoint(address.latitude, address.longitude)
+                    selectedPoint = geoPoint
+                    binding.saveButton.isEnabled = true
+                    mapView.controller.animateTo(geoPoint)
+                    mapView.controller.setZoom(15.0)
+                    locationMarker.position = geoPoint
+                    mapView.invalidate()
+                } else {
+                    Toast.makeText(this@ChooseLocationActivity, "Address not found", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: IOException) {
+                Toast.makeText(this@ChooseLocationActivity, "Geocoder service not available", Toast.LENGTH_SHORT).show()
             }
-        } catch (e: IOException) {
-            Toast.makeText(this, "Geocoder service not available", Toast.LENGTH_SHORT).show()
         }
     }
 
