@@ -18,6 +18,7 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import android.widget.ImageView
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.view.GravityCompat
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var currentSelection = SelectionState.DEFAULT
+    private var pendingSelection: SelectionState? = null
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
@@ -120,6 +122,7 @@ class MainActivity : AppCompatActivity() {
 
         mapView = binding.mapView
         mapView.setMultiTouchControls(false)
+        mapView.setOnTouchListener { _, _ -> true }
 
         setupRecyclerViews()
         observeViewModel()
@@ -133,6 +136,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupClickListeners()
+
+        binding.rootLayout.addTransitionListener(object : MotionLayout.TransitionListener {
+            override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
+            }
+
+            override fun onTransitionChange(motionLayout: MotionLayout?, startId: Int, endId: Int, progress: Float) {
+            }
+
+            override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
+                if (currentId == R.id.default_set && pendingSelection != null) {
+                    val selection = pendingSelection!!
+                    pendingSelection = null
+                    handleSelection(selection)
+                }
+            }
+
+            override fun onTransitionTrigger(motionLayout: MotionLayout?, triggerId: Int, positive: Boolean, progress: Float) {
+            }
+        })
     }
 
     private fun setupClickListeners() {
@@ -154,22 +176,30 @@ class MainActivity : AppCompatActivity() {
             selection
         }
 
-        // Handle text size change before transition
-        if (targetState == SelectionState.LOG) {
-            binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+        if (currentSelection != SelectionState.DEFAULT && targetState != SelectionState.DEFAULT) {
+            // A different card is selected. First, go back to default.
+            pendingSelection = targetState
+            binding.rootLayout.transitionToState(R.id.default_set)
         } else {
+            // Handle text size change before transition
+            if (targetState == SelectionState.LOG) {
+                binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            } else {
+                binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
+            }
             binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
         }
 
-        currentSelection = targetState
+            currentSelection = targetState
 
-        val transitionId = when (targetState) {
-            SelectionState.DEFAULT -> R.id.default_set
-            SelectionState.WIFI -> R.id.wifi_selected
-            SelectionState.PASSWORD -> R.id.password_selected
-            SelectionState.LOG -> R.id.log_selected
+            val transitionId = when (targetState) {
+                SelectionState.DEFAULT -> R.id.default_set
+                SelectionState.WIFI -> R.id.wifi_selected
+                SelectionState.PASSWORD -> R.id.password_selected
+                SelectionState.LOG -> R.id.log_selected
+            }
+            binding.rootLayout.transitionToState(transitionId)
         }
-        binding.rootLayout.transitionToState(transitionId)
     }
 
     private fun setupRecyclerViews() {

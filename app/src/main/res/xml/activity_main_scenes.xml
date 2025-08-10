@@ -40,7 +40,6 @@
         <Constraint
             android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
-            android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -80,7 +79,6 @@
         <Constraint
             android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
-            android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -120,7 +118,6 @@
         <Constraint
             android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
-            android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
