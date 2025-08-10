@@ -29,6 +29,10 @@ import androidx.core.content.ContextCompat
 import android.content.Intent
 import android.content.SharedPreferences
 import com.google.android.material.navigation.NavigationView
+import org.osmdroid.events.MapListener
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
 
@@ -255,6 +259,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun handleMapChange() {
+        val boundingBox = mapView.boundingBox
+        Log.d("MainActivity", "Map bounds changed: $boundingBox")
+        // TODO: Debounce this call to avoid excessive processing
+        viewModel.onMapBoundsChanged(boundingBox)
+    }
+
     private fun setupMap() {
         val mapController = mapView.controller
         mapController.setZoom(20.0)
@@ -280,6 +291,18 @@ class MainActivity : AppCompatActivity() {
             }
             updateMenuForManualMode(false)
         }
+
+        mapView.addMapListener(object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                handleMapChange()
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                handleMapChange()
+                return true
+            }
+        })
     }
 
     private fun observeLocationUpdates() {
