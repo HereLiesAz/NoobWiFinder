@@ -187,6 +187,8 @@ class MainActivity : AppCompatActivity() {
             } else {
                 binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
             }
+            binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
+        }
 
             currentSelection = targetState
 
