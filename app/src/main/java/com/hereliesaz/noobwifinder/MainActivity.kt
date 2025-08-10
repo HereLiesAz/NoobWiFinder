@@ -18,7 +18,6 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import android.widget.ImageView
 import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.view.GravityCompat
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -42,12 +41,8 @@ class MainActivity : AppCompatActivity() {
         PASSWORD,
         LOG
     }
-    private val debounceHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var debounceRunnable: Runnable? = null
-    private val debounceDelayMs = 300L
 
     private var currentSelection = SelectionState.DEFAULT
-    private var pendingSelection: SelectionState? = null
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
@@ -129,7 +124,6 @@ class MainActivity : AppCompatActivity() {
 
         mapView = binding.mapView
         mapView.setMultiTouchControls(false)
-        mapView.setOnTouchListener { _, _ -> true }
 
         setupRecyclerViews()
         observeViewModel()
@@ -143,25 +137,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupClickListeners()
-
-        binding.rootLayout.addTransitionListener(object : MotionLayout.TransitionListener {
-            override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-            }
-
-            override fun onTransitionChange(motionLayout: MotionLayout?, startId: Int, endId: Int, progress: Float) {
-            }
-
-            override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-                if (currentId == R.id.default_set && pendingSelection != null) {
-                    val selection = pendingSelection!!
-                    pendingSelection = null
-                    handleSelection(selection)
-                }
-            }
-
-            override fun onTransitionTrigger(motionLayout: MotionLayout?, triggerId: Int, positive: Boolean, progress: Float) {
-            }
-        })
     }
 
     private fun setupClickListeners() {
@@ -183,30 +158,22 @@ class MainActivity : AppCompatActivity() {
             selection
         }
 
-        if (currentSelection != SelectionState.DEFAULT && targetState != SelectionState.DEFAULT) {
-            // A different card is selected. First, go back to default.
-            pendingSelection = targetState
-            binding.rootLayout.transitionToState(R.id.default_set)
+        // Handle text size change before transition
+        if (targetState == SelectionState.LOG) {
+            binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
         } else {
-            // Handle text size change before transition
-            if (targetState == SelectionState.LOG) {
-                binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            } else {
-                binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
-            }
             binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
         }
 
-            currentSelection = targetState
+        currentSelection = targetState
 
-            val transitionId = when (targetState) {
-                SelectionState.DEFAULT -> R.id.default_set
-                SelectionState.WIFI -> R.id.wifi_selected
-                SelectionState.PASSWORD -> R.id.password_selected
-                SelectionState.LOG -> R.id.log_selected
-            }
-            binding.rootLayout.transitionToState(transitionId)
+        val transitionId = when (targetState) {
+            SelectionState.DEFAULT -> R.id.default_set
+            SelectionState.WIFI -> R.id.wifi_selected
+            SelectionState.PASSWORD -> R.id.password_selected
+            SelectionState.LOG -> R.id.log_selected
         }
+        binding.rootLayout.transitionToState(transitionId)
     }
 
     private fun setupRecyclerViews() {
@@ -256,30 +223,10 @@ class MainActivity : AppCompatActivity() {
     private fun checkAndRequestLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            locationPermissionRequest.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            locationPermissionRequest.launch(arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION))
         }
-    }
-
-
-    private val debounceHandler = android.os.Handler(android.os.Looper.getMainLooper())
-    private var debounceRunnable: Runnable? = null
-    private val debounceDelayMs = 300L
-
-    private fun handleMapChange() {
-        val boundingBox = mapView.boundingBox
-        Log.d("MainActivity", "Map bounds changed: $boundingBox")
-
-        // Debounce logic: cancel previous runnable and post a new one
-        debounceRunnable?.let { debounceHandler.removeCallbacks(it) }
-        debounceRunnable = Runnable {
-            viewModel.onMapBoundsChanged(boundingBox)
-        }
-        debounceHandler.postDelayed(debounceRunnable!!, debounceDelayMs)
     }
 
     private fun handleMapChange() {
@@ -384,4 +331,4 @@ class MainActivity : AppCompatActivity() {
         locationService.stopLocationUpdates()
     }
 
-
+}
