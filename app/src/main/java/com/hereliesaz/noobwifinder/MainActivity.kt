@@ -158,7 +158,7 @@ class MainActivity : AppCompatActivity() {
         if (targetState == SelectionState.LOG) {
             binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
         } else {
-            binding.logConsole.setTextAppearance(android.R.style.TextAppearance_Small)
+            binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
         }
 
         currentSelection = targetState

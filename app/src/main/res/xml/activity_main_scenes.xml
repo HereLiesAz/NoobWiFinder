@@ -9,7 +9,7 @@
     <ConstraintSet android:id="@+id/wifi_selected">
         <!-- Wifi card takes up most of the screen -->
         <Constraint
-            android:id="@+id/wifi_list_card"
+            android:id="@id/wifi_list_card"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -20,7 +20,7 @@
 
         <!-- Other cards are minimized or hidden -->
         <Constraint
-            android:id="@+id/password_list_card"
+            android:id="@id/password_list_card"
             android:layout_width="0dp"
             android:layout_height="1dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -28,7 +28,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:alpha="0"/>
         <Constraint
-            android:id="@+id/log_card"
+            android:id="@id/log_card"
             android:layout_width="0dp"
             android:layout_height="1dp"
             app:layout_constraintBottom_toTopOf="@id/map_card"
@@ -38,7 +38,7 @@
 
         <!-- Map card is smaller -->
         <Constraint
-            android:id="@+id/map_card"
+            android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
             android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -49,7 +49,7 @@
     <ConstraintSet android:id="@+id/password_selected">
         <!-- Password card takes up most of the screen -->
         <Constraint
-            android:id="@+id/password_list_card"
+            android:id="@id/password_list_card"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -60,7 +60,7 @@
 
         <!-- Other cards are minimized or hidden -->
         <Constraint
-            android:id="@+id/wifi_list_card"
+            android:id="@id/wifi_list_card"
             android:layout_width="1dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -68,7 +68,7 @@
             app:layout_constraintEnd_toStartOf="parent"
             android:alpha="0"/>
         <Constraint
-            android:id="@+id/log_card"
+            android:id="@id/log_card"
             android:layout_width="0dp"
             android:layout_height="1dp"
             app:layout_constraintBottom_toTopOf="@id/map_card"
@@ -78,7 +78,7 @@
 
         <!-- Map card is smaller -->
         <Constraint
-            android:id="@+id/map_card"
+            android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
             android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -89,7 +89,7 @@
     <ConstraintSet android:id="@+id/log_selected">
         <!-- Log card takes up most of the screen -->
         <Constraint
-            android:id="@+id/log_card"
+            android:id="@id/log_card"
             android:layout_width="0dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -100,7 +100,7 @@
 
         <!-- Other cards are minimized or hidden -->
         <Constraint
-            android:id="@+id/wifi_list_card"
+            android:id="@id/wifi_list_card"
             android:layout_width="1dp"
             android:layout_height="0dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -108,7 +108,7 @@
             app:layout_constraintEnd_toStartOf="parent"
             android:alpha="0"/>
         <Constraint
-            android:id="@+id/password_list_card"
+            android:id="@id/password_list_card"
             android:layout_width="0dp"
             android:layout_height="1dp"
             app:layout_constraintTop_toBottomOf="@id/toolbar"
@@ -118,7 +118,7 @@
 
         <!-- Map card is smaller -->
         <Constraint
-            android:id="@+id/map_card"
+            android:id="@id/map_card"
             app:layout_constraintWidth_percent="0.5"
             android:layout_marginBottom="-100dp"
             app:layout_constraintBottom_toBottomOf="parent"
