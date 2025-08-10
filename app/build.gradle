@@ -52,3 +52,8 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'org.jsoup:jsoup:1.17.2' // You can check Maven Central for the latest version if needed
 }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}

@@ -42,6 +42,9 @@ class MainActivity : AppCompatActivity() {
         PASSWORD,
         LOG
     }
+    private val debounceHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var debounceRunnable: Runnable? = null
+    private val debounceDelayMs = 300L
 
     private var currentSelection = SelectionState.DEFAULT
     private var pendingSelection: SelectionState? = null
@@ -253,10 +256,15 @@ class MainActivity : AppCompatActivity() {
     private fun checkAndRequestLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            locationPermissionRequest.launch(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION))
-class MainActivity : AppCompatActivity() {
+            locationPermissionRequest.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
 
     private val debounceHandler = android.os.Handler(android.os.Looper.getMainLooper())
     private var debounceRunnable: Runnable? = null
@@ -376,4 +384,4 @@ class MainActivity : AppCompatActivity() {
         locationService.stopLocationUpdates()
     }
 
-}
+
