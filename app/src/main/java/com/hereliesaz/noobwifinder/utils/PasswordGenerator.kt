@@ -36,27 +36,7 @@ object PasswordGenerator {
         return variations.distinct()
     }
 
-    fun generatePhoneNumberVariations(phoneNumber: String): List<String> {
-        val variations = mutableListOf<String>()
-        val digitsOnly = phoneNumber.filter { it.isDigit() }
-        if (digitsOnly.isNotEmpty()) {
-            variations.add(digitsOnly)
-            if (digitsOnly.length > 10) {
-                variations.add(digitsOnly.substring(digitsOnly.length - 10))
-            }
-            if (digitsOnly.length == 10) {
-                 variations.add(digitsOnly.substring(3))
-            }
-        }
-        return variations.distinct()
-    }
-
-    fun generatePasswords(address: String, phoneNumber: String?): List<String> {
-        val passwords = mutableListOf<String>()
-        passwords.addAll(generateAddressVariations(address))
-        phoneNumber?.let {
-            passwords.addAll(generatePhoneNumberVariations(it))
-        }
-        return passwords.distinct()
+    fun generatePasswords(address: String): List<String> {
+        return generateAddressVariations(address)
     }
 }
