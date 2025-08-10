@@ -145,13 +145,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val latSpan = boundingBox.latNorth - boundingBox.latSouth
             val lonSpan = boundingBox.lonEast - boundingBox.lonWest
 
-            // Create a 5x5 grid of points
+            // Create a 5x5 grid of points, including the edges
             val gridSize = 5
-            val latStep = latSpan / gridSize
-            val lonStep = lonSpan / gridSize
+            val latStep = latSpan / (gridSize - 1)
+            val lonStep = lonSpan / (gridSize - 1)
 
-            for (i in 0 until gridSize) {
-                for (j in 0 until gridSize) {
+            for (i in 0..(gridSize - 1)) {
+                for (j in 0..(gridSize - 1)) {
                     val lat = boundingBox.latSouth + (i * latStep)
                     val lon = boundingBox.lonWest + (j * lonStep)
                     try {
