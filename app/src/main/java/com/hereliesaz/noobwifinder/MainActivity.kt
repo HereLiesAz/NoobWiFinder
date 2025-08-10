@@ -226,14 +226,22 @@ class MainActivity : AppCompatActivity() {
             locationPermissionRequest.launch(arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION))
-        }
-    }
+class MainActivity : AppCompatActivity() {
+
+    private val debounceHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var debounceRunnable: Runnable? = null
+    private val debounceDelayMs = 300L
 
     private fun handleMapChange() {
         val boundingBox = mapView.boundingBox
         Log.d("MainActivity", "Map bounds changed: $boundingBox")
-        // TODO: Debounce this call to avoid excessive processing
-        viewModel.onMapBoundsChanged(boundingBox)
+
+        // Debounce logic: cancel previous runnable and post a new one
+        debounceRunnable?.let { debounceHandler.removeCallbacks(it) }
+        debounceRunnable = Runnable {
+            viewModel.onMapBoundsChanged(boundingBox)
+        }
+        debounceHandler.postDelayed(debounceRunnable!!, debounceDelayMs)
     }
 
     private fun setupMap() {
