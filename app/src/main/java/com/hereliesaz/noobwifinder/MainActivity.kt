@@ -1,44 +1,67 @@
 package com.hereliesaz.noobwifinder
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
-import android.content.Context
-import android.location.LocationManager
-import android.util.TypedValue
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.hereliesaz.noobwifinder.databinding.ActivityMainBinding
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 import com.hereliesaz.noobwifinder.services.LocationService
-import org.osmdroid.config.Configuration
+import com.hereliesaz.noobwifinder.ui.theme.NoobWifiFinderTheme
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
-import android.widget.ImageView
-import androidx.core.view.GravityCompat
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
-import androidx.core.content.ContextCompat
-import android.content.Intent
-import org.osmdroid.util.BoundingBox
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
-    private enum class SelectionState {
-        DEFAULT,
-        WIFI,
-        PASSWORD,
-        LOG
-    }
-
-    private var currentSelection = SelectionState.DEFAULT
-
-    private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
-    private lateinit var wifiListAdapter: WifiListAdapter
-    private lateinit var passwordListAdapter: PasswordListAdapter
-    private lateinit var mapView: MapView
     private lateinit var locationService: LocationService
 
     private val locationPermissionRequest = registerForActivityResult(
@@ -46,224 +69,338 @@ class MainActivity : AppCompatActivity() {
     ) { permissions ->
         when {
             permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) -> {
-                // Fine location access granted.
+                locationService.startLocationUpdates()
             }
             permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                // Only approximate location access granted.
+                locationService.startLocationUpdates()
             } else -> {
-            // No location access granted.
-            Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
-        }
+                // No location access granted.
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private val chooseLocationLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.let {
-                val lat = it.getDoubleExtra(ChooseLocationActivity.EXTRA_LATITUDE, 0.0)
-                val lon = it.getDoubleExtra(ChooseLocationActivity.EXTRA_LONGITUDE, 0.0)
-                if (lat != 0.0 && lon != 0.0) {
-                    val point = GeoPoint(lat, lon)
-                    val boundingBox = BoundingBox(
-                        point.latitude + 0.009,
-                        point.longitude + 0.009,
-                        point.latitude - 0.009,
-                        point.longitude - 0.009
-                    )
-                    viewModel.onMapBoundsChanged(boundingBox)
-                    mapView.controller.setCenter(point)
-                }
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
-        Configuration.getInstance().userAgentValue = BuildConfig.APPLICATION_ID
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.mipmap.ic_launcher)
-        binding.toolbar.setNavigationOnClickListener {
-            binding.drawerLayout.openDrawer(GravityCompat.START)
-        }
-
-        binding.navView.getHeaderView(0).findViewById<ImageView>(R.id.nav_header_icon).setOnClickListener {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-        }
-
-        binding.navView.setNavigationItemSelectedListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.nav_choose_location -> {
-                    val intent = Intent(this, ChooseLocationActivity::class.java)
-                    chooseLocationLauncher.launch(intent)
-                    true
-                }
-                else -> false
-            }
-        }
-
         locationService = LocationService(this)
-
-        mapView = binding.mapView
-        mapView.setMultiTouchControls(false)
-        mapView.setOnTouchListener { _, _ -> true }
-
-        setupRecyclerViews()
-        observeViewModel()
-        observeLocationUpdates()
+        setContent {
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "main") {
+                composable("main") {
+                    MainScreen(
+                        viewModel = viewModel,
+                        locationService = locationService,
+                        onChooseLocation = {
+                            navController.navigate("choose_location")
+                        }
+                    )
+                }
+                composable("choose_location") {
+                    ChooseLocationScreen(
+                        onSave = { geoPoint ->
+                            viewModel.onLocationSelected(geoPoint)
+                            navController.popBackStack()
+                        },
+                        onCancel = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+        }
         checkAndRequestLocationPermission()
-        setupMap()
-
-
-        binding.startStopButton.setOnClickListener {
-            viewModel.startStopCracking()
-        }
-
-        binding.mapCard.setOnClickListener {
-            viewModel.startStopCracking()
-        }
-
-        setupClickListeners()
-    }
-
-    private fun setupClickListeners() {
-        binding.wifiListCard.setOnClickListener {
-            handleSelection(SelectionState.WIFI)
-        }
-        binding.passwordListCard.setOnClickListener {
-            handleSelection(SelectionState.PASSWORD)
-        }
-        binding.logCard.setOnClickListener {
-            handleSelection(SelectionState.LOG)
-        }
-    }
-
-    private fun handleSelection(selection: SelectionState) {
-        val targetState = if (currentSelection == selection) {
-            SelectionState.DEFAULT
-        } else {
-            selection
-        }
-
-        // Handle text size change before transition
-        if (targetState == SelectionState.LOG) {
-            binding.logConsole.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-        } else {
-            binding.logConsole.setTextAppearance(androidx.appcompat.R.style.TextAppearance_AppCompat_Body1)
-        }
-
-        currentSelection = targetState
-
-        val transitionId = when (targetState) {
-            SelectionState.DEFAULT -> R.id.default_set
-            SelectionState.WIFI -> R.id.wifi_selected
-            SelectionState.PASSWORD -> R.id.password_selected
-            SelectionState.LOG -> R.id.log_selected
-        }
-        binding.rootLayout.transitionToState(transitionId)
-    }
-
-    private fun setupRecyclerViews() {
-        wifiListAdapter = WifiListAdapter(emptyList())
-        binding.wifiList.adapter = wifiListAdapter
-        binding.wifiList.layoutManager = LinearLayoutManager(this)
-
-        passwordListAdapter = PasswordListAdapter(emptyList())
-        binding.passwordList.adapter = passwordListAdapter
-        binding.passwordList.layoutManager = LinearLayoutManager(this)
-    }
-
-    private fun observeViewModel() {
-        viewModel.wifiList.observe(this) { wifiList ->
-            wifiListAdapter.updateData(wifiList)
-            mapView.overlays.clear()
-            wifiList.forEach { wifiInfo ->
-                val marker = Marker(mapView)
-                marker.position = wifiInfo.location
-                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                marker.title = wifiInfo.ssid
-                marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
-                mapView.overlays.add(marker)
-            }
-            mapView.invalidate()
-        }
-
-        viewModel.passwordList.observe(this) { passwords ->
-            passwordListAdapter.updateData(passwords)
-        }
-
-        viewModel.logMessages.observe(this) { message ->
-            binding.logConsole.append("$message\n")
-        }
-
-        viewModel.isCracking.observe(this) { isCracking ->
-            if (isCracking) {
-                binding.startStopButton.text = "Pause"
-                binding.startStopButton.backgroundTintList = ContextCompat.getColorStateList(this, R.color.muted_red)
-            } else {
-                binding.startStopButton.text = "Scan"
-                binding.startStopButton.backgroundTintList = ContextCompat.getColorStateList(this, R.color.muted_green)
-            }
-        }
-
-        viewModel.isGeneratingFromLocation.observe(this) { isGenerating ->
-            binding.startStopButton.isEnabled = !isGenerating
-            binding.mapCard.isEnabled = !isGenerating
-        }
-    }
-
-    private fun checkAndRequestLocationPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            locationPermissionRequest.launch(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION))
-        }
-    }
-
-    private fun setupMap() {
-        val mapController = mapView.controller
-        mapController.setZoom(20.0)
-
-        val startPoint = GeoPoint(48.858370, 2.294481);
-        mapController.setCenter(startPoint);
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            val lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            if (lastKnownLocation != null) {
-                val userLocation = GeoPoint(lastKnownLocation.latitude, lastKnownLocation.longitude)
-                mapView.controller.setCenter(userLocation)
-            }
-        }
-    }
-
-    private fun observeLocationUpdates() {
-        locationService.locationUpdates.observe(this) { location ->
-            val userLocation = GeoPoint(location.latitude, location.longitude)
-            mapView.controller.animateTo(userLocation)
-            mapView.controller.setZoom(20.0)
-        }
     }
 
     override fun onResume() {
         super.onResume()
-        mapView.onResume()
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             locationService.startLocationUpdates()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        mapView.onPause()
         locationService.stopLocationUpdates()
+    }
+
+    private fun checkAndRequestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            locationPermissionRequest.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun MainScreen(
+    viewModel: MainViewModel,
+    locationService: LocationService,
+    onChooseLocation: () -> Unit
+) {
+    val wifiList by viewModel.wifiList.observeAsState(initial = emptyList())
+    val passwordList by viewModel.passwordList.observeAsState(initial = emptyList())
+    val logMessages by viewModel.logMessages.observeAsState(initial = "")
+    val isCracking by viewModel.isCracking.observeAsState(initial = false)
+    val isGeneratingFromLocation by viewModel.isGeneratingFromLocation.observeAsState(initial = false)
+    val userLocation by locationService.locationUpdates.observeAsState()
+
+    MainScreenContent(
+        wifiList = wifiList,
+        passwordList = passwordList,
+        logMessages = logMessages,
+        isCracking = isCracking,
+        isGeneratingFromLocation = isGeneratingFromLocation,
+        userLocation = userLocation,
+        onChooseLocation = onChooseLocation,
+        onStartStopClick = { viewModel.startStopCracking() }
+    )
+}
+
+@Composable
+fun MainScreenContent(
+    wifiList: List<WifiNetworkInfo>,
+    passwordList: List<String>,
+    logMessages: String,
+    isCracking: Boolean,
+    isGeneratingFromLocation: Boolean,
+    userLocation: Location?,
+    onChooseLocation: () -> Unit,
+    onStartStopClick: () -> Unit
+) {
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf(
+        stringResource(id = R.string.wifi),
+        stringResource(id = R.string.passwords),
+        stringResource(id = R.string.logs)
+    )
+
+    NoobWifiFinderTheme {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                Button(
+                    onClick = onChooseLocation,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(stringResource(id = R.string.choose_location))
+                }
+                Button(
+                    onClick = onStartStopClick,
+                    enabled = !isGeneratingFromLocation,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text(if (isCracking) stringResource(id = R.string.pause) else stringResource(id = R.string.scan))
+                }
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp),
+                    factory = { context ->
+                        MapView(context).apply {
+                            setMultiTouchControls(true)
+                            controller.setZoom(15.0)
+                        }
+                    },
+                    update = { mapView ->
+                        mapView.overlays.clear()
+                        wifiList.forEach { wifiInfo ->
+                            val marker = Marker(mapView)
+                            marker.position = wifiInfo.location
+                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            marker.title = wifiInfo.ssid
+                            marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                            mapView.overlays.add(marker)
+                        }
+                        userLocation?.let {
+                            val geoPoint = GeoPoint(it.latitude, it.longitude)
+                            mapView.controller.setCenter(geoPoint)
+                        }
+                        mapView.invalidate()
+                    }
+                )
+                TabRow(selectedTabIndex = selectedTabIndex) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = { Text(text = title) }
+                        )
+                    }
+                }
+                when (selectedTabIndex) {
+                    0 -> WifiList(wifiList)
+                    1 -> PasswordList(passwordList)
+                    2 -> LogConsole(logMessages)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WifiList(wifiList: List<WifiNetworkInfo>) {
+    AnimatedVisibility(
+        visible = wifiList.isNotEmpty(),
+        enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 1000))
+    ) {
+        LazyColumn(modifier = Modifier.padding(8.dp)) {
+            items(wifiList) { wifiNetwork ->
+                WifiListItem(wifiNetwork)
+            }
+        }
+    }
+}
+
+@Composable
+fun PasswordList(passwordList: List<String>) {
+    AnimatedVisibility(
+        visible = passwordList.isNotEmpty(),
+        enter = fadeIn(animationSpec = tween(durationMillis = 1000)),
+        exit = fadeOut(animationSpec = tween(durationMillis = 1000))
+    ) {
+        LazyColumn(modifier = Modifier.padding(8.dp)) {
+            items(passwordList) { password ->
+                PasswordListItem(password)
+            }
+        }
+    }
+}
+
+@Composable
+fun LogConsole(logMessages: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text(text = logMessages)
+    }
+}
+
+@Composable
+fun PasswordListItem(password: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = password,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun WifiListItem(wifiNetwork: WifiNetworkInfo) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { expanded = !expanded }
+            .animateContentSize()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = wifiNetwork.ssid,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+            Text(
+                text = stringResource(id = R.string.signal_strength, wifiNetwork.signalStrength),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontStyle = FontStyle.Italic
+                )
+            )
+            if (expanded) {
+                Text(
+                    text = stringResource(id = R.string.bssid, wifiNetwork.bssid),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun WifiListItemPreview() {
+    NoobWifiFinderTheme {
+        WifiListItem(
+            WifiNetworkInfo(
+                "My Wifi",
+                "00:11:22:33:44:55",
+                -50,
+                "WPA2",
+                GeoPoint(0.0, 0.0)
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenPreview() {
+    val sampleWifiList = listOf(
+        WifiNetworkInfo("Wifi 1", "00:11:22:33:44:55", -50, "WPA2", GeoPoint(0.0, 0.0)),
+        WifiNetworkInfo("Wifi 2", "00:11:22:33:44:56", -75, "WEP", GeoPoint(0.0, 0.0)),
+        WifiNetworkInfo("Wifi 3", "00:11:22:33:44:57", -90, "OPEN", GeoPoint(0.0, 0.0))
+    )
+    val samplePasswordList = listOf("password123", "12345678", "qwerty")
+    val sampleLogMessages = "Log message 1\nLog message 2\nLog message 3"
+    MainScreenContent(
+        wifiList = sampleWifiList,
+        passwordList = samplePasswordList,
+        logMessages = sampleLogMessages,
+        isCracking = false,
+        isGeneratingFromLocation = false,
+        userLocation = null,
+        onChooseLocation = {},
+        onStartStopClick = {}
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PasswordListItemPreview() {
+    NoobWifiFinderTheme {
+        PasswordListItem("password123")
     }
 }
