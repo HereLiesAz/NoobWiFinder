@@ -33,6 +33,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isCracking = MutableLiveData<Boolean>(false)
     val isCracking: LiveData<Boolean> = _isCracking
 
+    private val _isGeneratingFromLocation = MutableLiveData<Boolean>(false)
+    val isGeneratingFromLocation: LiveData<Boolean> = _isGeneratingFromLocation
+
     private var crackingJob: Job? = null
     private var fetchAddressesJob: Job? = null
 
@@ -121,9 +124,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _logMessages.value = "Cracking process stopped by user."
     }
 
+    fun onLocationSelected(point: GeoPoint) {
+        val boundingBox = BoundingBox(
+            point.latitude + 0.009,
+            point.longitude + 0.009,
+            point.latitude - 0.009,
+            point.longitude - 0.009
+        )
+        onMapBoundsChanged(boundingBox)
+    }
+
     fun onMapBoundsChanged(boundingBox: BoundingBox) {
         fetchAddressesJob?.cancel() // Cancel previous job
         fetchAddressesJob = viewModelScope.launch {
+            _isGeneratingFromLocation.postValue(true)
             delay(500) // Debounce for 500ms
             _logMessages.postValue("Fetching addresses in bounds...")
             val addresses = fetchAddressesInBounds(boundingBox)
@@ -135,6 +149,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 _logMessages.postValue("No addresses found in the visible area.")
             }
+            _isGeneratingFromLocation.postValue(false)
         }
     }
 
