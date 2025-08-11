@@ -187,7 +187,7 @@ fun MainScreenContent(
     onChooseLocation: () -> Unit,
     onStartStopClick: () -> Unit
 ) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf(
         stringResource(id = R.string.wifi),
         stringResource(id = R.string.passwords),
