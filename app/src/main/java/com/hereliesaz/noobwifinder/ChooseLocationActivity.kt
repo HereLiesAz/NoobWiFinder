@@ -5,6 +5,7 @@ import android.content.Intent
 import android.location.Geocoder
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.hereliesaz.noobwifinder.databinding.ActivityChooseLocationBinding
@@ -16,13 +17,14 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import java.io.IOException
+import java.util.concurrent.CancellationException
 
 class ChooseLocationActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityChooseLocationBinding
     private lateinit var mapView: MapView
-    private var selectedPoint: GeoPoint? = null
     private lateinit var locationMarker: Marker
+    private val viewModel: ChooseLocationViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +34,18 @@ class ChooseLocationActivity : AppCompatActivity() {
 
         setupMap()
         setupButtons()
-        binding.saveButton.isEnabled = selectedPoint != null
+        observeViewModel()
+    }
+
+    private fun observeViewModel() {
+        viewModel.selectedPoint.observe(this) { geoPoint ->
+            binding.saveButton.isEnabled = geoPoint != null
+            if (geoPoint != null) {
+                locationMarker.position = geoPoint
+                mapView.controller.animateTo(geoPoint)
+                mapView.invalidate()
+            }
+        }
     }
 
     private fun setupMap() {
@@ -41,7 +54,7 @@ class ChooseLocationActivity : AppCompatActivity() {
 
         val mapController = mapView.controller
         mapController.setZoom(9.5)
-        val startPoint = GeoPoint(48.858370, 2.294481) // Default to Paris
+        val startPoint = viewModel.selectedPoint.value ?: GeoPoint(48.858370, 2.294481) // Default to Paris
         mapController.setCenter(startPoint)
 
         locationMarker = Marker(mapView)
@@ -49,13 +62,16 @@ class ChooseLocationActivity : AppCompatActivity() {
         locationMarker.position = startPoint
         locationMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
         mapView.overlays.add(locationMarker)
-        selectedPoint = startPoint
+
+        if (viewModel.selectedPoint.value == null) {
+            viewModel.setSelectedPoint(startPoint)
+        }
+
 
         locationMarker.setOnMarkerDragListener(object : Marker.OnMarkerDragListener {
             override fun onMarkerDrag(marker: Marker) {}
             override fun onMarkerDragEnd(marker: Marker) {
-                selectedPoint = marker.position
-                binding.saveButton.isEnabled = true
+                viewModel.setSelectedPoint(marker.position)
             }
             override fun onMarkerDragStart(marker: Marker) {}
         })
@@ -72,7 +88,7 @@ class ChooseLocationActivity : AppCompatActivity() {
         }
 
         binding.saveButton.setOnClickListener {
-            selectedPoint?.let {
+            viewModel.selectedPoint.value?.let {
                 val resultIntent = Intent()
                 resultIntent.putExtra(EXTRA_LATITUDE, it.latitude)
                 resultIntent.putExtra(EXTRA_LONGITUDE, it.longitude)
@@ -100,17 +116,15 @@ class ChooseLocationActivity : AppCompatActivity() {
                 if (addresses != null && addresses.isNotEmpty()) {
                     val address = addresses[0]
                     val geoPoint = GeoPoint(address.latitude, address.longitude)
-                    selectedPoint = geoPoint
-                    binding.saveButton.isEnabled = true
-                    mapView.controller.animateTo(geoPoint)
+                    viewModel.setSelectedPoint(geoPoint)
                     mapView.controller.setZoom(15.0)
-                    locationMarker.position = geoPoint
-                    mapView.invalidate()
                 } else {
                     Toast.makeText(this@ChooseLocationActivity, "Address not found", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: IOException) {
-                Toast.makeText(this@ChooseLocationActivity, "Geocoder service not available", Toast.LENGTH_SHORT).show()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Toast.makeText(this@ChooseLocationActivity, "An error occurred during search: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

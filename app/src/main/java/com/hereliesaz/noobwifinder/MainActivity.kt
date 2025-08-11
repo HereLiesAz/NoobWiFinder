@@ -26,6 +26,7 @@ import org.osmdroid.util.BoundingBox
 class MainActivity : AppCompatActivity() {
 
     private var currentSelection = SelectionState.DEFAULT
+    private val markerMap = mutableMapOf<String, Marker>()
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
@@ -193,18 +194,19 @@ class MainActivity : AppCompatActivity() {
 
             wifiList.forEach { wifiInfo ->
                 val existingMarker = markerMap[wifiInfo.ssid]
+                val snippet = getString(R.string.wifi_strength_format, wifiInfo.signalStrength)
                 if (existingMarker != null) {
                     if (existingMarker.position != wifiInfo.location ||
-                        existingMarker.snippet != "Strength: ${wifiInfo.signalStrength} dBm") {
+                        existingMarker.snippet != snippet) {
                         existingMarker.position = wifiInfo.location
-                        existingMarker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                        existingMarker.snippet = snippet
                     }
                 } else {
                     val marker = Marker(mapView)
                     marker.position = wifiInfo.location
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     marker.title = wifiInfo.ssid
-                    marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                    marker.snippet = snippet
                     mapView.overlays.add(marker)
                     markerMap[wifiInfo.ssid] = marker
                 }
