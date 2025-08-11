@@ -124,6 +124,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _logMessages.value = "Cracking process stopped by user."
     }
 
+    fun onLocationSelected(point: GeoPoint) {
+        val boundingBox = BoundingBox(
+            point.latitude + 0.009,
+            point.longitude + 0.009,
+            point.latitude - 0.009,
+            point.longitude - 0.009
+        )
+        onMapBoundsChanged(boundingBox)
+    }
+
     fun onMapBoundsChanged(boundingBox: BoundingBox) {
         fetchAddressesJob?.cancel() // Cancel previous job
         fetchAddressesJob = viewModelScope.launch {
