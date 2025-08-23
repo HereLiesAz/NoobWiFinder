@@ -9,23 +9,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.views.MapView
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import android.location.Geocoder
 import androidx.compose.ui.platform.LocalContext
 import org.osmdroid.util.GeoPoint
+
 import androidx.compose.ui.res.stringResource
-import com.hereliesaz.noobwifinder.R
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun ChooseLocationScreen(
@@ -36,7 +33,6 @@ fun ChooseLocationScreen(
     val context = LocalContext.current
     val geocoder = Geocoder(context)
     var location by remember { mutableStateOf<GeoPoint?>(null) }
-    val scope = rememberCoroutineScope()
 
     Column(modifier = Modifier.padding(16.dp)) {
         OutlinedTextField(
@@ -47,18 +43,14 @@ fun ChooseLocationScreen(
         )
         Row {
             Button(onClick = {
-                scope.launch(Dispatchers.IO) {
-                    try {
-                        val addresses = geocoder.getFromLocationName(address, 1)
-                        if (addresses?.isNotEmpty() == true) {
-                            val newLocation = addresses[0]
-                            withContext(Dispatchers.Main) {
-                                location = GeoPoint(newLocation.latitude, newLocation.longitude)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        // Handle exception
+                try {
+                    val addresses = geocoder.getFromLocationName(address, 1)
+                    if (addresses?.isNotEmpty() == true) {
+                        val newLocation = addresses[0]
+                        location = GeoPoint(newLocation.latitude, newLocation.longitude)
                     }
+                } catch (e: Exception) {
+                    // Handle exception
                 }
             }) {
                 Text(stringResource(id = R.string.search))
