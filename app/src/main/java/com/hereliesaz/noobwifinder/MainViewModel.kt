@@ -12,6 +12,7 @@ import com.hereliesaz.noobwifinder.services.WifiScanResult
 import com.hereliesaz.noobwifinder.services.WifiService
 import android.location.Geocoder
 import android.util.Log
+import com.hereliesaz.noobwifinder.commands.Command
 import com.hereliesaz.noobwifinder.utils.PasswordGenerator
 import kotlinx.coroutines.*
 import org.osmdroid.util.BoundingBox
@@ -36,7 +37,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isGeneratingFromLocation = MutableLiveData<Boolean>(false)
     val isGeneratingFromLocation: LiveData<Boolean> = _isGeneratingFromLocation
 
+    private val _startScreenCapture = MutableLiveData<Boolean>()
+    val startScreenCapture: LiveData<Boolean> = _startScreenCapture
+
     private var crackingJob: Job? = null
+
+    fun executeCommand(command: Command) {
+        command.execute()
+    }
+
+    fun startScreenCapture() {
+        _startScreenCapture.value = true
+    }
+
+    fun onScreenCaptureStarted() {
+        _startScreenCapture.value = false
+    }
+
+    private val _capturedBitmap = MutableLiveData<android.graphics.Bitmap>()
+    val capturedBitmap: LiveData<android.graphics.Bitmap> = _capturedBitmap
+
+    fun onBitmapCaptured(bitmap: android.graphics.Bitmap) {
+        _capturedBitmap.value = bitmap
+    }
     private var fetchAddressesJob: Job? = null
 
     private val locationService = LocationService(application)
