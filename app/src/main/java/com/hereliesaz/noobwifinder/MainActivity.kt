@@ -1,8 +1,12 @@
 package com.hereliesaz.noobwifinder
 
 import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Bundle
 import android.widget.Toast
@@ -39,6 +43,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -80,6 +86,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val screenCaptureLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val intent = Intent(this, com.hereliesaz.noobwifinder.services.ScreenCaptureService::class.java).apply {
+                this.action = "START"
+                putExtra("resultCode", result.resultCode)
+                putExtra("data", result.data)
+            }
+            startForegroundService(intent)
+        } else {
+            Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +131,24 @@ class MainActivity : ComponentActivity() {
             }
         }
         checkAndRequestLocationPermission()
+
+        viewModel.startScreenCapture.observe(this) { start ->
+            if (start) {
+                val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
+                screenCaptureLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
+                viewModel.onScreenCaptureStarted()
+            }
+        }
+    }
+
+    private val screenCaptureReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val byteArray = intent?.getByteArrayExtra("bitmap")
+            if (byteArray != null) {
+                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                viewModel.onBitmapCaptured(bitmap)
+            }
+        }
     }
 
     override fun onResume() {
@@ -124,11 +163,13 @@ class MainActivity : ComponentActivity() {
         ) {
             locationService.startLocationUpdates()
         }
+        registerReceiver(screenCaptureReceiver, IntentFilter("com.hereliesaz.noobwifinder.SCREEN_CAPTURE"), RECEIVER_EXPORTED)
     }
 
     override fun onPause() {
         super.onPause()
         locationService.stopLocationUpdates()
+        unregisterReceiver(screenCaptureReceiver)
     }
 
     private fun checkAndRequestLocationPermission() {
@@ -163,8 +204,10 @@ fun MainScreen(
     val isCracking by viewModel.isCracking.observeAsState(initial = false)
     val isGeneratingFromLocation by viewModel.isGeneratingFromLocation.observeAsState(initial = false)
     val userLocation by locationService.locationUpdates.observeAsState()
+    val capturedBitmap by viewModel.capturedBitmap.observeAsState()
 
     MainScreenContent(
+        viewModel = viewModel,
         wifiList = wifiList,
         passwordList = passwordList,
         logMessages = logMessages,
@@ -172,12 +215,14 @@ fun MainScreen(
         isGeneratingFromLocation = isGeneratingFromLocation,
         userLocation = userLocation,
         onChooseLocation = onChooseLocation,
-        onStartStopClick = { viewModel.startStopCracking() }
+        onStartStopClick = { viewModel.startStopCracking() },
+        capturedBitmap = capturedBitmap
     )
 }
 
 @Composable
 fun MainScreenContent(
+    viewModel: MainViewModel,
     wifiList: List<WifiNetworkInfo>,
     passwordList: List<String>,
     logMessages: String,
@@ -185,7 +230,8 @@ fun MainScreenContent(
     isGeneratingFromLocation: Boolean,
     userLocation: Location?,
     onChooseLocation: () -> Unit,
-    onStartStopClick: () -> Unit
+    onStartStopClick: () -> Unit,
+    capturedBitmap: android.graphics.Bitmap?
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf(
@@ -204,6 +250,13 @@ fun MainScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
+                capturedBitmap?.let {
+                    androidx.compose.foundation.Image(
+                        bitmap = it.asImageBitmap(),
+                        contentDescription = "Captured Screen",
+                        modifier = Modifier.fillMaxWidth().height(200.dp)
+                    )
+                }
                 Button(
                     onClick = onChooseLocation,
                     modifier = Modifier.padding(16.dp)
@@ -216,6 +269,14 @@ fun MainScreenContent(
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     Text(if (isCracking) stringResource(id = R.string.pause) else stringResource(id = R.string.scan))
+                }
+                Button(
+                    onClick = {
+                        viewModel.executeCommand(com.hereliesaz.noobwifinder.commands.ScreenCaptureCommand(viewModel))
+                    },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text("Start Screen Capture")
                 }
                 AndroidView(
                     modifier = Modifier
@@ -375,27 +436,27 @@ fun WifiListItemPreview() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    val sampleWifiList = listOf(
-        WifiNetworkInfo("Wifi 1", "00:11:22:33:44:55", -50, "WPA2", GeoPoint(0.0, 0.0)),
-        WifiNetworkInfo("Wifi 2", "00:11:22:33:44:56", -75, "WEP", GeoPoint(0.0, 0.0)),
-        WifiNetworkInfo("Wifi 3", "00:11:22:33:44:57", -90, "OPEN", GeoPoint(0.0, 0.0))
-    )
-    val samplePasswordList = listOf("password123", "12345678", "qwerty")
-    val sampleLogMessages = "Log message 1\nLog message 2\nLog message 3"
-    MainScreenContent(
-        wifiList = sampleWifiList,
-        passwordList = samplePasswordList,
-        logMessages = sampleLogMessages,
-        isCracking = false,
-        isGeneratingFromLocation = false,
-        userLocation = null,
-        onChooseLocation = {},
-        onStartStopClick = {}
-    )
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun MainScreenPreview() {
+//    val sampleWifiList = listOf(
+//        WifiNetworkInfo("Wifi 1", "00:11:22:33:44:55", -50, "WPA2", GeoPoint(0.0, 0.0)),
+//        WifiNetworkInfo("Wifi 2", "00:11:22:33:44:56", -75, "WEP", GeoPoint(0.0, 0.0)),
+//        WifiNetworkInfo("Wifi 3", "00:11:22:33:44:57", -90, "OPEN", GeoPoint(0.0, 0.0))
+//    )
+//    val samplePasswordList = listOf("password123", "12345678", "qwerty")
+//    val sampleLogMessages = "Log message 1\nLog message 2\nLog message 3"
+//    MainScreenContent(
+//        wifiList = sampleWifiList,
+//        passwordList = samplePasswordList,
+//        logMessages = sampleLogMessages,
+//        isCracking = false,
+//        isGeneratingFromLocation = false,
+//        userLocation = null,
+//        onChooseLocation = {},
+//        onStartStopClick = {}
+//    )
+//}
 
 @Preview(showBackground = true)
 @Composable
