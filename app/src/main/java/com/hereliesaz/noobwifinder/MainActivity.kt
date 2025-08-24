@@ -146,6 +146,7 @@ class MainActivity : ComponentActivity() {
             val byteArray = intent?.getByteArrayExtra("bitmap")
             if (byteArray != null) {
                 val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+
                 if (bitmap != null) {
                     viewModel.onBitmapCaptured(bitmap)
                 }
