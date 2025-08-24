@@ -146,6 +146,12 @@ class MainActivity : ComponentActivity() {
             val byteArray = intent?.getByteArrayExtra("bitmap")
             if (byteArray != null) {
                 val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+
+                if (bitmap != null) {
+                    viewModel.onBitmapCaptured(bitmap)
+                }
+            }
+                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
                 viewModel.onBitmapCaptured(bitmap)
             }
         }
@@ -250,12 +256,37 @@ fun MainScreenContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                capturedBitmap?.let {
+                capturedBitmap?.let { originalBitmap ->
+                    // Scale the bitmap to a reasonable size for display
+                    val targetWidth = 600
+                    val targetHeight = 200
+                    val scaledBitmap = if (
+                        originalBitmap.width > targetWidth ||
+                        originalBitmap.height > targetHeight
+                    ) {
+                        android.graphics.Bitmap.createScaledBitmap(
+                            originalBitmap,
+                            targetWidth,
+                            targetHeight,
+                            true
+                        )
+                    } else {
+                        originalBitmap
+                    }
                     androidx.compose.foundation.Image(
-                        bitmap = it.asImageBitmap(),
+                        bitmap = scaledBitmap.asImageBitmap(),
                         contentDescription = "Captured Screen",
-                        modifier = Modifier.fillMaxWidth().height(200.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
                     )
+                } ?: Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No screenshot captured", style = MaterialTheme.typography.bodyMedium)
                 }
                 Button(
                     onClick = onChooseLocation,
