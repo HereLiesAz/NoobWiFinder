@@ -33,11 +33,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
+import com.hereliesaz.aznavrail.AzNavRail
+import com.hereliesaz.aznavrail.azMenuItem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -106,26 +105,33 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         locationService = LocationService(this)
         setContent {
-            val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "main") {
-                composable("main") {
+            var selectedTabIndex by remember { mutableIntStateOf(0) }
+            var showChooseLocation by remember { mutableStateOf(false) }
+
+            if (showChooseLocation) {
+                ChooseLocationScreen(
+                    onSave = { geoPoint ->
+                        viewModel.onLocationSelected(geoPoint)
+                        showChooseLocation = false
+                    },
+                    onCancel = {
+                        showChooseLocation = false
+                    }
+                )
+            } else {
+                NoobWifiFinderTheme {
+                    AzNavRail {
+                        azMenuItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
+                        azMenuItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
+                        azMenuItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
+                    }
                     MainScreen(
                         viewModel = viewModel,
                         locationService = locationService,
                         onChooseLocation = {
-                            navController.navigate("choose_location")
-                        }
-                    )
-                }
-                composable("choose_location") {
-                    ChooseLocationScreen(
-                        onSave = { geoPoint ->
-                            viewModel.onLocationSelected(geoPoint)
-                            navController.popBackStack()
+                            showChooseLocation = true
                         },
-                        onCancel = {
-                            navController.popBackStack()
-                        }
+                        selectedTabIndex = selectedTabIndex
                     )
                 }
             }
@@ -202,7 +208,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     viewModel: MainViewModel,
     locationService: LocationService,
-    onChooseLocation: () -> Unit
+    onChooseLocation: () -> Unit,
+    selectedTabIndex: Int
 ) {
     val wifiList by viewModel.wifiList.observeAsState(initial = emptyList())
     val passwordList by viewModel.passwordList.observeAsState(initial = emptyList())
@@ -222,7 +229,8 @@ fun MainScreen(
         userLocation = userLocation,
         onChooseLocation = onChooseLocation,
         onStartStopClick = { viewModel.startStopCracking() },
-        capturedBitmap = capturedBitmap
+        capturedBitmap = capturedBitmap,
+        selectedTabIndex = selectedTabIndex
     )
 }
 
@@ -237,15 +245,9 @@ fun MainScreenContent(
     userLocation: Location?,
     onChooseLocation: () -> Unit,
     onStartStopClick: () -> Unit,
-    capturedBitmap: android.graphics.Bitmap?
+    capturedBitmap: android.graphics.Bitmap?,
+    selectedTabIndex: Int
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf(
-        stringResource(id = R.string.wifi),
-        stringResource(id = R.string.passwords),
-        stringResource(id = R.string.logs)
-    )
-
     NoobWifiFinderTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -336,15 +338,6 @@ fun MainScreenContent(
                         mapView.invalidate()
                     }
                 )
-                TabRow(selectedTabIndex = selectedTabIndex) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(text = title) }
-                        )
-                    }
-                }
                 when (selectedTabIndex) {
                     0 -> WifiList(wifiList)
                     1 -> PasswordList(passwordList)
