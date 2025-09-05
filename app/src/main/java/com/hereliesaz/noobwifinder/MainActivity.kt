@@ -20,7 +20,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +46,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
 import com.hereliesaz.aznavrail.AzNavRail
-import com.hereliesaz.aznavrail.azMenuItem
+import com.hereliesaz.aznavrail.azNavItem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -53,9 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 import com.hereliesaz.noobwifinder.services.LocationService
 import com.hereliesaz.noobwifinder.ui.theme.NoobWifiFinderTheme
@@ -120,19 +119,21 @@ class MainActivity : ComponentActivity() {
                 )
             } else {
                 NoobWifiFinderTheme {
-                    AzNavRail {
-                        azMenuItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
-                        azMenuItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
-                        azMenuItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
+                    Row(Modifier.fillMaxSize()) {
+                        AzNavRail {
+                        azNavItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
+                        azNavItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
+                        azNavItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
+                        }
+                        MainScreen(
+                            viewModel = viewModel,
+                            locationService = locationService,
+                            onChooseLocation = {
+                                showChooseLocation = true
+                            },
+                            selectedTabIndex = selectedTabIndex
+                        )
                     }
-                    MainScreen(
-                        viewModel = viewModel,
-                        locationService = locationService,
-                        onChooseLocation = {
-                            showChooseLocation = true
-                        },
-                        selectedTabIndex = selectedTabIndex
-                    )
                 }
             }
         }
@@ -156,9 +157,6 @@ class MainActivity : ComponentActivity() {
                 if (bitmap != null) {
                     viewModel.onBitmapCaptured(bitmap)
                 }
-            }
-                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                viewModel.onBitmapCaptured(bitmap)
             }
         }
     }

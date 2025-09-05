@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.application'
-    id 'kotlin-android'
     id 'org.jetbrains.kotlin.plugin.compose' version '2.2.0'
 }
 
@@ -10,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.hereliesaz.noobwifinder"
-        minSdk 24
+        minSdk 26
         targetSdk 36
         versionCode 1
         versionName "1.0"
@@ -35,9 +34,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
     }
     buildToolsVersion '36.0.0'
     ndkVersion '29.0.13599879 rc2'
@@ -91,7 +87,7 @@ dependencies {
     implementation "androidx.navigation:navigation-compose:$nav_version"
 
     // AzNavRail
-    implementation 'com.github.HereLiesAz:AzNavRail:2.2'
+    implementation 'com.github.HereLiesAz:AzNavRail:2.3'
 }
 java {
     toolchain {
