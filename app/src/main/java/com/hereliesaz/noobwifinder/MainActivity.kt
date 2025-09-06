@@ -121,9 +121,9 @@ class MainActivity : ComponentActivity() {
             } else {
                 NoobWifiFinderTheme {
                     Row(Modifier.fillMaxSize()) {
-                        AzNavRail {
-                        azNavItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
-                        azNavItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
+                            azNavItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
+                            azNavItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
+                            azNavItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
                         azNavItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
                         }
                         MainScreen(
