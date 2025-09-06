@@ -20,6 +20,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,6 +61,7 @@ import androidx.navigation.compose.rememberNavController
 import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 import com.hereliesaz.noobwifinder.services.LocationService
 import com.hereliesaz.noobwifinder.ui.theme.NoobWifiFinderTheme
+import com.hereliesaz.aznavrail.*
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -131,15 +133,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         checkAndRequestLocationPermission()
-
-        viewModel.startScreenCapture.observe(this) { start ->
-            if (start) {
-                val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as android.media.projection.MediaProjectionManager
-                screenCaptureLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
-                viewModel.onScreenCaptureStarted()
-            }
-        }
     }
+
 
     private val screenCaptureReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -150,9 +145,6 @@ class MainActivity : ComponentActivity() {
                 if (bitmap != null) {
                     viewModel.onBitmapCaptured(bitmap)
                 }
-            }
-                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                viewModel.onBitmapCaptured(bitmap)
             }
         }
     }
@@ -251,109 +243,119 @@ fun MainScreenContent(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
-                capturedBitmap?.let { originalBitmap ->
-                    // Scale the bitmap to a reasonable size for display
-                    val targetWidth = 600
-                    val targetHeight = 200
-                    val scaledBitmap = if (
-                        originalBitmap.width > targetWidth ||
-                        originalBitmap.height > targetHeight
-                    ) {
-                        android.graphics.Bitmap.createScaledBitmap(
-                            originalBitmap,
-                            targetWidth,
-                            targetHeight,
-                            true
+            AzNavRail {
+                azSettings(
+                    displayAppNameInHeader = false,
+                    packRailButtons = false
+                )
+                azMenuItem(id = "home", text = "Home", onClick = { /* Navigate home */ })
+                azRailItem(id = "favorites", text = "Favs", onClick = { /* Show favorites */ })
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ) {
+                    capturedBitmap?.let { originalBitmap ->
+                        // Scale the bitmap to a reasonable size for display
+                        val targetWidth = 600
+                        val targetHeight = 200
+                        val scaledBitmap = if (
+                            originalBitmap.width > targetWidth ||
+                            originalBitmap.height > targetHeight
+                        ) {
+                            android.graphics.Bitmap.createScaledBitmap(
+                                originalBitmap,
+                                targetWidth,
+                                targetHeight,
+                                true
+                            )
+                        } else {
+                            originalBitmap
+                        }
+                        androidx.compose.foundation.Image(
+                            bitmap = scaledBitmap.asImageBitmap(),
+                            contentDescription = "Captured Screen",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
                         )
-                    } else {
-                        originalBitmap
-                    }
-                    androidx.compose.foundation.Image(
-                        bitmap = scaledBitmap.asImageBitmap(),
-                        contentDescription = "Captured Screen",
+                    } ?: Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No screenshot captured", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Button(
+                        onClick = onChooseLocation,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(stringResource(id = R.string.choose_location))
+                    }
+                    Button(
+                        onClick = onStartStopClick,
+                        enabled = !isGeneratingFromLocation,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text(if (isCracking) stringResource(id = R.string.pause) else stringResource(id = R.string.scan))
+                    }
+                    Button(
+                        onClick = {
+                            viewModel.executeCommand(com.hereliesaz.noobwifinder.commands.ScreenCaptureCommand(viewModel))
+                        },
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Text("Start Screen Capture")
+                    }
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp),
+                        factory = { context ->
+                            MapView(context).apply {
+                                setMultiTouchControls(true)
+                                controller.setZoom(15.0)
+                            }
+                        },
+                        update = { mapView ->
+                            mapView.overlays.clear()
+                            wifiList.forEach { wifiInfo ->
+                                val marker = Marker(mapView)
+                                marker.position = wifiInfo.location
+                                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                marker.title = wifiInfo.ssid
+                                marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
+                                mapView.overlays.add(marker)
+                            }
+                            userLocation?.let {
+                                val geoPoint = GeoPoint(it.latitude, it.longitude)
+                                mapView.controller.setCenter(geoPoint)
+                            }
+                            mapView.invalidate()
+                        }
                     )
-                } ?: Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No screenshot captured", style = MaterialTheme.typography.bodyMedium)
-                }
-                Button(
-                    onClick = onChooseLocation,
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(stringResource(id = R.string.choose_location))
-                }
-                Button(
-                    onClick = onStartStopClick,
-                    enabled = !isGeneratingFromLocation,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Text(if (isCracking) stringResource(id = R.string.pause) else stringResource(id = R.string.scan))
-                }
-                Button(
-                    onClick = {
-                        viewModel.executeCommand(com.hereliesaz.noobwifinder.commands.ScreenCaptureCommand(viewModel))
-                    },
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Text("Start Screen Capture")
-                }
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    factory = { context ->
-                        MapView(context).apply {
-                            setMultiTouchControls(true)
-                            controller.setZoom(15.0)
+                    TabRow(selectedTabIndex = selectedTabIndex) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedTabIndex == index,
+                                onClick = { selectedTabIndex = index },
+                                text = { Text(text = title) }
+                            )
                         }
-                    },
-                    update = { mapView ->
-                        mapView.overlays.clear()
-                        wifiList.forEach { wifiInfo ->
-                            val marker = Marker(mapView)
-                            marker.position = wifiInfo.location
-                            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            marker.title = wifiInfo.ssid
-                            marker.snippet = "Strength: ${wifiInfo.signalStrength} dBm"
-                            mapView.overlays.add(marker)
-                        }
-                        userLocation?.let {
-                            val geoPoint = GeoPoint(it.latitude, it.longitude)
-                            mapView.controller.setCenter(geoPoint)
-                        }
-                        mapView.invalidate()
                     }
-                )
-                TabRow(selectedTabIndex = selectedTabIndex) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(text = title) }
-                        )
+                    when (selectedTabIndex) {
+                        0 -> WifiList(wifiList)
+                        1 -> PasswordList(passwordList)
+                        2 -> LogConsole(logMessages)
                     }
-                }
-                when (selectedTabIndex) {
-                    0 -> WifiList(wifiList)
-                    1 -> PasswordList(passwordList)
-                    2 -> LogConsole(logMessages)
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun WifiList(wifiList: List<WifiNetworkInfo>) {
