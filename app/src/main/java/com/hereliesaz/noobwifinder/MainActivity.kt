@@ -22,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,11 +35,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Alignment
+import com.hereliesaz.aznavrail.AzNavRail
+import com.hereliesaz.aznavrail.azNavItem
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -55,9 +55,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.hereliesaz.noobwifinder.data.WifiNetworkInfo
 import com.hereliesaz.noobwifinder.services.LocationService
 import com.hereliesaz.noobwifinder.ui.theme.NoobWifiFinderTheme
@@ -108,27 +105,36 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         locationService = LocationService(this)
         setContent {
-            val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "main") {
-                composable("main") {
-                    MainScreen(
-                        viewModel = viewModel,
-                        locationService = locationService,
-                        onChooseLocation = {
-                            navController.navigate("choose_location")
+            var selectedTabIndex by remember { mutableIntStateOf(0) }
+            var showChooseLocation by remember { mutableStateOf(false) }
+
+            if (showChooseLocation) {
+                ChooseLocationScreen(
+                    onSave = { geoPoint ->
+                        viewModel.onLocationSelected(geoPoint)
+                        showChooseLocation = false
+                    },
+                    onCancel = {
+                        showChooseLocation = false
+                    }
+                )
+            } else {
+                NoobWifiFinderTheme {
+                    Row(Modifier.fillMaxSize()) {
+                            azNavItem(id = "wifi", text = "Wifi", onClick = { selectedTabIndex = 0 })
+                            azNavItem(id = "passwords", text = "Passwords", onClick = { selectedTabIndex = 1 })
+                            azNavItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
+                        azNavItem(id = "logs", text = "Logs", onClick = { selectedTabIndex = 2 })
                         }
-                    )
-                }
-                composable("choose_location") {
-                    ChooseLocationScreen(
-                        onSave = { geoPoint ->
-                            viewModel.onLocationSelected(geoPoint)
-                            navController.popBackStack()
-                        },
-                        onCancel = {
-                            navController.popBackStack()
-                        }
-                    )
+                        MainScreen(
+                            viewModel = viewModel,
+                            locationService = locationService,
+                            onChooseLocation = {
+                                showChooseLocation = true
+                            },
+                            selectedTabIndex = selectedTabIndex
+                        )
+                    }
                 }
             }
         }
@@ -194,7 +200,8 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     viewModel: MainViewModel,
     locationService: LocationService,
-    onChooseLocation: () -> Unit
+    onChooseLocation: () -> Unit,
+    selectedTabIndex: Int
 ) {
     val wifiList by viewModel.wifiList.observeAsState(initial = emptyList())
     val passwordList by viewModel.passwordList.observeAsState(initial = emptyList())
@@ -214,7 +221,8 @@ fun MainScreen(
         userLocation = userLocation,
         onChooseLocation = onChooseLocation,
         onStartStopClick = { viewModel.startStopCracking() },
-        capturedBitmap = capturedBitmap
+        capturedBitmap = capturedBitmap,
+        selectedTabIndex = selectedTabIndex
     )
 }
 
@@ -229,15 +237,9 @@ fun MainScreenContent(
     userLocation: Location?,
     onChooseLocation: () -> Unit,
     onStartStopClick: () -> Unit,
-    capturedBitmap: android.graphics.Bitmap?
+    capturedBitmap: android.graphics.Bitmap?,
+    selectedTabIndex: Int
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf(
-        stringResource(id = R.string.wifi),
-        stringResource(id = R.string.passwords),
-        stringResource(id = R.string.logs)
-    )
-
     NoobWifiFinderTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -345,11 +347,11 @@ fun MainScreenContent(
                             )
                         }
                     }
-                    when (selectedTabIndex) {
-                        0 -> WifiList(wifiList)
-                        1 -> PasswordList(passwordList)
-                        2 -> LogConsole(logMessages)
-                    }
+                )
+                when (selectedTabIndex) {
+                    0 -> WifiList(wifiList)
+                    1 -> PasswordList(passwordList)
+                    2 -> LogConsole(logMessages)
                 }
             }
         }
