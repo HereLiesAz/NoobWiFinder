@@ -1,0 +1,72 @@
+# Project File Descriptions
+
+This document provides a comprehensive list of all non-ignored files in the project, along with a brief but thorough description of their purpose. It is intended to be a living document that is updated as the project evolves. Its goal is to help developers understand the project's structure and where to find specific functionality.
+
+---
+
+## Files
+
+- **.anacodept.act**: An action file for the Anacodept static analysis tool.
+- **.classpath**: A file that specifies the classpath for the project.
+- **.github/workflow/release.yaml**: A GitHub Actions workflow file for creating releases.
+- **.gitignore**: A file that specifies which files and directories to ignore in the project.
+- **AGENTS.md**: A file that provides instructions for AI agents working on the project.
+- **app/build.gradle**: The Gradle build file for the Android application module. It defines the application's dependencies, build variants, and other build-related configurations.
+- **app/lint-baseline.xml**: A file that contains a baseline for the Android Lint tool.
+- **app/src/main/AndroidManifest.xml**: The Android manifest file for the application. It declares the application's components, permissions, and other essential information.
+- **app/src/main/assets/jaren_petit_record.html**: An HTML file containing a sample record for Jaren Petit.
+- **app/src/main/assets/marais_st_record.html**: An HTML file containing a sample record for a location on Marais St.
+- **app/src/main/assets/placeholder.txt**: A placeholder file.
+- **app/src/main/assets/reverse_phone_search.html**: An HTML file containing a sample reverse phone search result.
+- **app/src/main/assets/sample_4.html**: A generic HTML sample file.
+- **app/src/main/assets/smartbackgroundchecks_search.html**: An HTML file containing a sample search result from SmartBackgroundChecks.
+- **app/src/main/ic_launcher-playstore.png**: The application's launcher icon for the Google Play Store.
+- **app/src/main/java/com/hereliesaz/noobwifinder/ChooseLocationScreen.kt**: A Kotlin file containing the UI for the choose location screen. This screen allows the user to select a location on a map.
+- **app/src/main/java/com/hereliesaz/noobwifinder/ChooseLocationViewModel.kt**: A Kotlin file containing the view model for the choose location screen. It handles the business logic for the choose location screen.
+- **app/src/main/java/com/hereliesaz/noobwifinder/MainActivity.kt**: The main activity for the application. It is the entry point for the application and hosts the Jetpack Compose UI.
+- **app/src/main/java/com/hereliesaz/noobwifinder/MainViewModel.kt**: The main view model for the application. It manages the application's state, including the list of Wi-Fi networks, passwords, and log messages. It also handles the logic for the password cracking process.
+- **app/src/main/java/com/hereliesaz/noobwifinder/SelectionState.kt**: A Kotlin file containing a sealed class for representing selection states.
+- **app/src/main/java/com/hereliesaz/noobwifinder/commands/Command.kt**: A Kotlin file containing a command interface. This is part of a command pattern implementation.
+- **app/src/main/java/com/hereliesaz/noobwifinder/commands/ScreenCaptureCommand.kt**: A Kotlin file containing a command for capturing the screen.
+- **app/src/main/java/com/hereliesaz/noobwifinder/data/WifiNetworkInfo.kt**: A Kotlin file containing a data class for representing Wi-Fi network information.
+- **app/src/main/java/com/hereliesaz/noobwifinder/services/LocationService.kt**: A Kotlin file containing a service for getting the device's location. It uses the Fused Location Provider API to get the device's location.
+- **app/src/main/java/com/hereliesaz/noobwifinder/services/ReverseLookupService.kt**: A Kotlin file containing a service for performing reverse lookups.
+- **app/src/main/java/com/hereliesaz/noobwifinder/services/ScreenCaptureService.kt**: A Kotlin file containing a service for capturing the screen.
+- **app/src/main/java/com/hereliesaz/noobwifinder/services/WifiService.kt**: A Kotlin file containing a service for scanning for Wi-Fi networks. It uses the WifiManager to scan for and connect to Wi-Fi networks.
+- **app/src/main/java/com/hereliesaz/noobwifinder/ui/theme/Color.kt**: A Kotlin file containing the application's color theme.
+- **app/src/main/java/com/hereliesaz/noobwifinder/ui/theme/Theme.kt**: A Kotlin file containing the application's theme.
+- **app/src/main/java/com/hereliesaz/noobwifinder/ui/theme/Type.kt**: A Kotlin file containing the application's typography theme.
+- **app/src/main/java/com/hereliesaz/noobwifinder/utils/LogUtil.kt**: A Kotlin file containing a utility for logging.
+- **app/src/main/java/com/hereliesaz/noobwifinder/utils/PasswordGenerator.kt**: A Kotlin file containing a utility for generating passwords. It can generate passwords based on a Wi-Fi network's SSID or an address.
+- **app/src/main/java/com/hereliesaz/reverselookup/model/Address.kt**: A Kotlin file containing a data class for representing an address.
+- **app/src/main/java/com/hereliesaz/reverselookup/model/Person.kt**: A Kotlin file containing a data class for representing a person.
+- **app/src/main/java/com/hereliesaz/reverselookup/model/Phone.kt**: A Kotlin file containing a data class for representing a phone number.
+- **app/src/main/java/com/hereliesaz/reverselookup/parser/SmartBackgroundChecksParser.kt**: A Kotlin file containing a parser for SmartBackgroundChecks search results. It uses Jsoup to parse the HTML and extract the relevant information.
+- **app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml**: The application's launcher icon for adaptive launchers.
+- **app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml**: The application's round launcher icon for adaptive launchers.
+- **app/src/main/res/mipmap-hdpi/ic_launcher.webp**: The application's launcher icon for high-density screens.
+- **app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp**: The foreground layer of the application's launcher icon for high-density screens.
+- **app/src/main/res/mipmap-hdpi/ic_launcher_round.webp**: The application's round launcher icon for high-density screens.
+- **app/src/main/res/mipmap-mdpi/ic_launcher.webp**: The application's launcher icon for medium-density screens.
+- **app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp**: The foreground layer of the application's launcher icon for medium-density screens.
+- **app/src/main/res/mipmap-mdpi/ic_launcher_round.webp**: The application's round launcher icon for medium-density screens.
+- **app/src/main/res/mipmap-xhdpi/ic_launcher.webp**: The application's launcher icon for extra-high-density screens.
+- **app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp**: The foreground layer of the application's launcher icon for extra-high-density screens.
+- **app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp**: The application's round launcher icon for extra-high-density screens.
+- **app/src/main/res/mipmap-xxhdpi/ic_launcher.webp**: The application's launcher icon for extra-extra-high-density screens.
+- **app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp**: The foreground layer of the application's launcher icon for extra-extra-high-density screens.
+- **app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp**: The application's round launcher icon for extra-extra-high-density screens.
+- **app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp**: The application's launcher icon for extra-extra-extra-high-density screens.
+- **app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp**: The foreground layer of the application's launcher icon for extra-extra-extra-high-density screens.
+- **app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp**: The application's round launcher icon for extra-extra-extra-high-density screens.
+- **app/src/main/res/values/ic_launcher_background.xml**: A file that defines the background color for the application's launcher icon.
+- **app/src/main/res/values/ids.xml**: A file that defines IDs for views.
+- **app/src/main/res/values/strings.xml**: A file that contains the application's strings.
+- **backup.ps1**: A PowerShell script for creating a backup.
+- **build.gradle**: The root Gradle build file for the project.
+- **gradle.properties**: A file that contains Gradle properties for the project.
+- **gradle/wrapper/gradle-wrapper.jar**: The Gradle wrapper JAR file.
+- **gradle/wrapper/gradle-wrapper.properties**: The Gradle wrapper properties file.
+- **gradlew**: The Gradle wrapper script for Linux and macOS.
+- **gradlew.bat**: The Gradle wrapper script for Windows.
+- **settings.gradle**: The Gradle settings file for the project.
